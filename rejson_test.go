@@ -186,7 +186,6 @@ func TestJSONGet(t *testing.T) {
 		conn redis.Conn
 		key  string
 		path string
-		args []interface{}
 	}
 	tests := []struct {
 		name    string
@@ -227,7 +226,7 @@ func TestJSONGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path, tt.args.args...)
+			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
