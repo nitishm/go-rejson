@@ -10,15 +10,9 @@
   revision = "9c11da706d9b7902c6da69c592f75637793fe121"
   version = "v2.0.0"
 
-[[projects]]
-  name = "github.com/rafaeljusto/redigomock"
-  packages = ["."]
-  revision = "7ae0511314e9946bb0c87d6d485169ab2467a290"
-  version = "v2.1"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2e3c09463502c040ae7e3caf618eb7e57e6baba1bd3c06cffe495528cf7fd95d"
+  inputs-digest = "3f2ffe23e739dd972495d04286452c2dca6a3f97db12e33a8abfc528dd47963a"
   solver-name = "gps-cdcl"
   solver-version = 1
