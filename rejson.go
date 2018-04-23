@@ -41,6 +41,9 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+// CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
+// This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
+// MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
 func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) {
 	commandNameOut = commandNameIn
 	switch commandNameIn {
@@ -56,6 +59,9 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 			return "", nil, err
 		}
 		break
+	default:
+		err = fmt.Errorf("Command %s not supported by ReJSON", commandNameIn)
+		return "", nil, err
 	}
 	return
 }
