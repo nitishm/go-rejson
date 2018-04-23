@@ -14,12 +14,15 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"flag"
 	rejson "go-rejson"
 	"log"
 
 	"github.com/gomodule/redigo/redis"
 )
+
+var addr = flag.String("Server", "localhost:6379", "Redis server address")
 
 type Name struct {
 	First  string `json:"first,omitempty"`
@@ -33,9 +36,11 @@ type Student struct {
 }
 
 func main() {
-	conn, err := redis.Dial("tcp", "6390")
+	flag.Parse()
+
+	conn, err := redis.Dial("tcp", *addr)
 	if err != nil {
-		log.Fatal("Failed to connect to port 6390")
+		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
 	}
 
 	student := Student{
@@ -48,9 +53,25 @@ func main() {
 	}
 	res, err := rejson.JSONSet(conn, "student", ".", student, false, false)
 	if err != nil {
+		log.Fatalf("Failed to JSONSet")
 		return
 	}
 
-	fmt.Printf("Success if OK - %s\n", res)
+	log.Printf("Success if - %s\n", res)
+
+	studentJSON, err := redis.Bytes(rejson.JSONGet(conn, "student", ""))
+	if err != nil {
+		log.Fatalf("Failed to JSONGet")
+		return
+	}
+
+	readStudent := Student{}
+	err = json.Unmarshal(studentJSON, &readStudent)
+	if err != nil {
+		log.Fatalf("Failed to JSON Unmarshal")
+		return
+	}
+
+	log.Printf("Student read from redis : %#v\n", readStudent)
 }
 ```
