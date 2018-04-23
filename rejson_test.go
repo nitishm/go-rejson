@@ -19,8 +19,8 @@ func TestJSONSet(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Close()
 		conn.Do("FLUSHALL")
+		conn.Close()
 	}()
 
 	testObj := TestObject{
@@ -80,17 +80,17 @@ func TestJSONSet(t *testing.T) {
 			wantRes: "OK",
 			wantErr: false,
 		},
-		// {
-		// 	name: "SimpleStringWithNXOK",
-		// 	args: args{
-		// 		key:  "knxstr",
-		// 		path: ".",
-		// 		obj:  123,
-		// 		NX:   true,
-		// 	},
-		// 	wantRes: "OK",
-		// 	wantErr: false,
-		// },
+		{
+			name: "SimpleStringWithNXOK",
+			args: args{
+				key:  "kstrnx",
+				path: ".",
+				obj:  123,
+				NX:   true,
+			},
+			wantRes: "OK",
+			wantErr: false,
+		},
 		{
 			name: "SimpleStringWithNXNotOK",
 			args: args{
@@ -158,8 +158,8 @@ func TestJSONGet(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Close()
 		conn.Do("FLUSHALL")
+		conn.Close()
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
