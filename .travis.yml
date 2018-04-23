@@ -12,8 +12,7 @@ before_install:
 install:
   - dep ensure
 
-services:
-  redis-server
-
 script:
+  - ./install-redis-rejson.sh
+  - ./start-redis-rejson.sh
   - go test -v .

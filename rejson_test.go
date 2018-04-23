@@ -13,7 +13,7 @@ type TestObject struct {
 }
 
 func TestJSONSet(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6390")
+	conn, err := redis.Dial("tcp", ":6379")
 	if err != nil {
 		t.Fatal("Could not connect to redis.")
 		return
@@ -152,7 +152,7 @@ func TestJSONSet(t *testing.T) {
 }
 
 func TestJSONGet(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6390")
+	conn, err := redis.Dial("tcp", ":6379")
 	if err != nil {
 		t.Fatal("Could not connect to redis.")
 		return
