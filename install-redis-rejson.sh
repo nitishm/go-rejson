@@ -5,4 +5,4 @@ tar -xzvf redis-4.0.9.tar.gz
 cd redis-4.0.9 && make 
 
 git clone https://github.com/RedisLabsModules/rejson.git
-cd github.com/RedisLabsModules/rejson && make
+cd rejson && make
