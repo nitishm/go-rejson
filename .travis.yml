@@ -1,7 +1,19 @@
-language: go
+go_import_path: github.com/nitishm/go-rejson
 
+language: go
 go:
+  - 1.9.x
   - 1.10.x
+  - tip
+
+os:
+  - linux
+  - osx
+
+matrix:
+  allow_failures:
+    -go: tip
+  fast_finish: true
 
 services:
   - docker
@@ -18,7 +30,11 @@ install:
   - dep ensure
 
 script:
+  - go install ./...
+  - diff -u <(echo -n) <(gofmt -d .)
   - go test -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+sudo: false
