@@ -1,5 +1,3 @@
-go_import_path: github.com/nitishm/go-rejson
-
 language: go
 go:
   - 1.10.x
@@ -26,11 +24,11 @@ install:
   - dep ensure
 
 script:
-  - go test -v ./...
+  - go test -v .
   - go test -race -coverprofile=coverage.txt -covermode=atomic
   - go test -covermode=count -coverprofile=profile.cov .
-  - go vet -x ./...
-  - megacheck ./...
+  - go vet -x .
+  - megacheck .
 
 after_script:
   - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci
