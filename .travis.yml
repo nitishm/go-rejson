@@ -8,9 +8,9 @@ services:
 
 before_install:
   # Setup dependency management tool
-- docker pull redislabs/rejson
-- docker run -d -p 6379:6379 --name redis-rejson redislabs/rejson:latest
-- docker ps -a
+  - docker pull redislabs/rejson
+  - docker run -d -p 6379:6379 --name redis-rejson redislabs/rejson:latest
+  - docker ps -a
 
 install:
   - dep ensure
