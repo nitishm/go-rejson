@@ -22,14 +22,14 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	argsOut = append(argsOut, b)
 
 	if NX && XX {
-		err = fmt.Errorf("Both NX and XX cannot be true.")
+		err = fmt.Errorf("Both NX and XX cannot be true")
 		return nil, err
-	} else {
-		if NX {
-			argsOut = append(argsOut, "NX")
-		} else if XX {
-			argsOut = append(argsOut, "XX")
-		}
+	}
+
+	if NX {
+		argsOut = append(argsOut, "NX")
+	} else if XX {
+		argsOut = append(argsOut, "XX")
 	}
 	return
 }
@@ -59,19 +59,16 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 		if err != nil {
 			return "", nil, err
 		}
-		break
 	case "JSON.GET":
 		argsOut, err = commandJSONGet(argsIn...)
 		if err != nil {
 			return "", nil, err
 		}
-		break
 	case "JSON.DEL":
 		argsOut, err = commandJSONDel(argsIn...)
 		if err != nil {
 			return "", nil, err
 		}
-		break
 	default:
 		err = fmt.Errorf("Command %s not supported by ReJSON", commandNameIn)
 		return "", nil, err
@@ -79,10 +76,9 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 	return
 }
 
-/* JSONSet
- * JSON.SET <key> <path> <json>
- *		 [NX | XX]
-**/
+// JSONSet used to set a json object
+// JSON.SET <key> <path> <json>
+// 		 [NX | XX]
 func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool, XX bool) (res interface{}, err error) {
 	name, args, err := CommandBuilder("JSON.SET", key, path, obj, NX, XX)
 	if err != nil {
@@ -91,15 +87,13 @@ func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool,
 	return conn.Do(name, args...)
 }
 
-/**
- * JSON.GET <key>
- *      [INDENT indentation-string]
- *		[NEWLINE line-break-string]
- * 		[SPACE space-string]
- *		[NOESCAPE]
- *		[path ...]
- * The args dont make much sense in terms of the client.
-**/
+// JSONGet used to get a json object
+// JSON.GET <key>
+//      [INDENT indentation-string]
+// 	[NEWLINE line-break-string]
+// 		[SPACE space-string]
+// 	[NOESCAPE]
+// 	[path ...]
 func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, err := CommandBuilder("JSON.GET", key, path)
 	if err != nil {
@@ -108,9 +102,8 @@ func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err err
 	return conn.Do(name, args...)
 }
 
-/**
- * JSON.DEL <key> <path>
-**/
+// JSONDel to delete a json object
+// JSON.DEL <key> <path>
 func JSONDel(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, err := CommandBuilder("JSON.DEL", key, path)
 	if err != nil {
