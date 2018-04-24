@@ -9,6 +9,9 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 - Go-ReJSON is built atop the [redigo](https://github.com/gomodule/redigo) client. 
 - The package is intended to be used in conjuction with the [redigo](https://github.com/gomodule/redigo), which means all features provided by the original package will be available.
 
+## Installation
+	go get github.com/nitishm/go-rejson
+
 ## Example usage
 ```golang
 package main
