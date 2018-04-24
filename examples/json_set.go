@@ -29,6 +29,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
 	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
 
 	student := Student{
 		Name: Name{

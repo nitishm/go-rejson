@@ -41,6 +41,13 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONDel(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
@@ -55,6 +62,12 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 		break
 	case "JSON.GET":
 		argsOut, err = commandJSONGet(argsIn...)
+		if err != nil {
+			return "", nil, err
+		}
+		break
+	case "JSON.DEL":
+		argsOut, err = commandJSONDel(argsIn...)
 		if err != nil {
 			return "", nil, err
 		}
@@ -89,6 +102,17 @@ func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool,
 **/
 func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, err := CommandBuilder("JSON.GET", key, path)
+	if err != nil {
+		return nil, err
+	}
+	return conn.Do(name, args...)
+}
+
+/**
+ * JSON.DEL <key> <path>
+**/
+func JSONDel(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, err := CommandBuilder("JSON.DEL", key, path)
 	if err != nil {
 		return nil, err
 	}
