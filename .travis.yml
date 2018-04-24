@@ -1,11 +1,13 @@
 language: go
 go:
+  - 1.9.x
   - 1.10.x
+  - tip
 
-# matrix:
-#   allow_failures:
-#     - go: tip
-#   fast_finish: true
+matrix:
+  allow_failures:
+    - go: tip
+  fast_finish: true
 
 services:
   - docker
@@ -25,7 +27,6 @@ install:
 
 script:
   - go test -v .
-  - go test -race -coverprofile=coverage.txt -covermode=atomic
   - go test -covermode=count -coverprofile=profile.cov .
   - go vet -x .
   - megacheck .
@@ -33,7 +34,3 @@ script:
 after_script:
   - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci
   
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
-
-sudo: false
