@@ -12,7 +12,7 @@ os:
 
 matrix:
   allow_failures:
-    -go: tip
+    - go: tip
   fast_finish: true
 
 services:
@@ -35,11 +35,11 @@ install:
 
 script:
   - go test -v ./...
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+  - go test -covermode=count -coverprofile=profile.cov .
   - go vet -x ./...
   - megacheck ./...
   - golint -set_exit_status $(go list ./...)
-  - go test -race -coverprofile=coverage.txt -covermode=atomic
-  - go test -covermode=count -coverprofile=profile.cov .
 
 after_script:
   - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci
