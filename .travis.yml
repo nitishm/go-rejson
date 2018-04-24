@@ -11,6 +11,8 @@ before_install:
   - docker pull redislabs/rejson
   - docker run -d -p 6379:6379 --name redis-rejson redislabs/rejson:latest
   - docker ps -a
+  - curl -L -s https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
 
 install:
   - dep ensure
