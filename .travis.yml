@@ -2,18 +2,12 @@ go_import_path: github.com/nitishm/go-rejson
 
 language: go
 go:
-  - 1.9.x
   - 1.10.x
-  - tip
 
-os:
-  - linux
-  - osx
-
-matrix:
-  allow_failures:
-    - go: tip
-  fast_finish: true
+# matrix:
+#   allow_failures:
+#     - go: tip
+#   fast_finish: true
 
 services:
   - docker
