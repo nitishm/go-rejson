@@ -329,3 +329,134 @@ func TestJSONDel(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONMGet(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	if err != nil {
+		return
+	}
+
+	testObj1 := TestObject{
+		Name:   "Item#1",
+		Number: 1,
+	}
+
+	testObj2 := TestObject{
+		Name:   "Item#2",
+		Number: 2,
+	}
+
+	testObj3 := TestObject{
+		Name:   "Item#3",
+		Number: 3,
+	}
+
+	_, err = JSONSet(conn, "testObj1", ".", testObj1, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "testObj2", ".", testObj2, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "testObj3", ".", testObj3, false, false)
+	if err != nil {
+		return
+	}
+
+	resultNameThreeStudents := make([]interface{}, 0)
+	type args struct {
+		conn redis.Conn
+		path string
+		keys []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "NameThreeStudents",
+			args: args{
+				conn: conn,
+				path: "name",
+				keys: []string{"testObj1", "testObj2", "testObj3"},
+			},
+			wantRes: append(resultNameThreeStudents,
+				[]byte("\"Item#1\""),
+				[]byte("\"Item#2\""),
+				[]byte("\"Item#3\""),
+			),
+			wantErr: false,
+		},
+		{
+			name: "NonExistingKey",
+			args: args{
+				conn: conn,
+				path: "name",
+				keys: []string{"testObj1", "testObj2", "foobar"},
+			},
+			wantRes: append(resultNameThreeStudents,
+				[]byte("\"Item#1\""),
+				[]byte("\"Item#2\""),
+				nil,
+			),
+			wantErr: false,
+		},
+		{
+			name: "NonExistingKey",
+			args: args{
+				conn: conn,
+				path: "foobar",
+				keys: []string{"testObj1"},
+			},
+			wantRes: append(resultNameThreeStudents,
+				nil,
+			),
+			wantErr: false,
+		},
+		{
+			name: "NoKeys",
+			args: args{
+				conn: conn,
+				path: "name",
+				keys: []string{},
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONMGet(tt.args.conn, tt.args.path, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONMGet() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONMGet() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestUnsupportedCommand(t *testing.T) {
+	_, _, err := CommandBuilder("FOOBAR", nil)
+	if err == nil {
+		t.Errorf("TestUnsupportedCommand() returned nil error")
+		return
+	}
+}
