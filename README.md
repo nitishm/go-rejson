@@ -16,6 +16,27 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 ## Installation
 	go get github.com/nitishm/go-rejson
 
+## Task List
+- [x] [JSON.SET](http://rejson.io/commands/#jsondel)
+- [x] [JSON.GET](http://rejson.io/commands/#jsonget)
+- [x] [JSON.MGET](http://rejson.io/commands/#jsonmget)
+- [x] [JSON.DEL](http://rejson.io/commands/#jsondel)
+- [ ] [JSON.TYPE](http://rejson.io/commands/#jsontype)
+- [ ] [JSON.NUMINCBY](http://rejson.io/commands/#jsonnumincrby)
+- [ ] [JSON.NUMMULTBY](http://rejson.io/commands/#jsonnummultby)
+- [ ] [JSON.STRAPPEND](http://rejson.io/commands/#jsonstrappend)
+- [ ] [JSON.STRLEN](http://rejson.io/commands/#jsonstrlen)
+- [ ] [JSON.ARRAPPEND](http://rejson.io/commands/#jsonarrappend)
+- [ ] [JSON.ARRINDEX](http://rejson.io/commands/#jsonarrindex)
+- [ ] [JSON.ARRLEN](http://rejson.io/commands/#jsonarrlen)
+- [ ] [JSON.ARRPOP](http://rejson.io/commands/#jsonarrpop)
+- [ ] [JSON.ARRTRIM](http://rejson.io/commands/#jsonarrtrim)
+- [ ] [JSON.OBJKEYS](http://rejson.io/commands/#jsonobjkeys)
+- [ ] [JSON.OBJLEN](http://rejson.io/commands/#jsonobjlen)
+- [ ] [JSON.DEBUG](http://rejson.io/commands/#jsondebug)
+- [ ] [JSON.FORGET](http://rejson.io/commands/#jsonforget)
+- [ ] [JSON.RESP](http://rejson.io/commands/#jsonresp)
+
 ## Example usage
 ```golang
 package main
