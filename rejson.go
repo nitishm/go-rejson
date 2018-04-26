@@ -56,6 +56,13 @@ func commandJSONMGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONType(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
@@ -79,6 +86,11 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 		}
 	case "JSON.MGET":
 		argsOut, err = commandJSONMGet(argsIn...)
+		if err != nil {
+			return "", nil, err
+		}
+	case "JSON.TYPE":
+		argsOut, err = commandJSONType(argsIn...)
 		if err != nil {
 			return "", nil, err
 		}
@@ -141,6 +153,16 @@ func JSONDel(conn redis.Conn, key string, path string) (res interface{}, err err
 	name, args, err := CommandBuilder("JSON.DEL", key, path)
 	if err != nil {
 		return nil, err
+	}
+	return conn.Do(name, args...)
+}
+
+// JSONType to get the type of key or member at path.
+// JSON.TYPE <key> [path]
+func JSONType(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, err := CommandBuilder("JSON.TYPE", key, path)
+	if err != nil {
+		return
 	}
 	return conn.Do(name, args...)
 }

@@ -21,7 +21,7 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 - [x] [JSON.GET](http://rejson.io/commands/#jsonget)
 - [x] [JSON.MGET](http://rejson.io/commands/#jsonmget)
 - [x] [JSON.DEL](http://rejson.io/commands/#jsondel)
-- [ ] [JSON.TYPE](http://rejson.io/commands/#jsontype)
+- [x] [JSON.TYPE](http://rejson.io/commands/#jsontype)
 - [ ] [JSON.NUMINCBY](http://rejson.io/commands/#jsonnumincrby)
 - [ ] [JSON.NUMMULTBY](http://rejson.io/commands/#jsonnummultby)
 - [ ] [JSON.STRAPPEND](http://rejson.io/commands/#jsonstrappend)
