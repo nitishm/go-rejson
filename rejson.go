@@ -63,6 +63,22 @@ func commandJSONType(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONNumIncrBy(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	number := argsIn[2]
+	argsOut = append(argsOut, key, path, number)
+	return
+}
+
+func commandJSONNumMultBy(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	number := argsIn[2]
+	argsOut = append(argsOut, key, path, number)
+	return
+}
+
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
@@ -91,6 +107,16 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 		}
 	case "JSON.TYPE":
 		argsOut, err = commandJSONType(argsIn...)
+		if err != nil {
+			return "", nil, err
+		}
+	case "JSON.NUMINCRBY":
+		argsOut, err = commandJSONNumIncrBy(argsIn...)
+		if err != nil {
+			return "", nil, err
+		}
+	case "JSON.NUMMULTBY":
+		argsOut, err = commandJSONNumMultBy(argsIn...)
 		if err != nil {
 			return "", nil, err
 		}
@@ -161,6 +187,26 @@ func JSONDel(conn redis.Conn, key string, path string) (res interface{}, err err
 // JSON.TYPE <key> [path]
 func JSONType(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, err := CommandBuilder("JSON.TYPE", key, path)
+	if err != nil {
+		return
+	}
+	return conn.Do(name, args...)
+}
+
+// JSONNumIncrBy to increment a number by provided amount
+// JSON.NUMINCRBY <key> <path> <number>
+func JSONNumIncrBy(conn redis.Conn, key string, path string, number int) (res interface{}, err error) {
+	name, args, err := CommandBuilder("JSON.NUMINCRBY", key, path, number)
+	if err != nil {
+		return
+	}
+	return conn.Do(name, args...)
+}
+
+// JSONNumMultBy to increment a number by provided amount
+// JSON.NUMMULTBY <key> <path> <number>
+func JSONNumMultBy(conn redis.Conn, key string, path string, number int) (res interface{}, err error) {
+	name, args, err := CommandBuilder("JSON.NUMMULTBY", key, path, number)
 	if err != nil {
 		return
 	}

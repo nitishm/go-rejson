@@ -552,3 +552,207 @@ func TestJSONType(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONNumIncrBy(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "kint", ".", 1, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	if err != nil {
+		return
+	}
+
+	testObj := TestObject{
+		Name:   "Item#1",
+		Number: 1,
+	}
+
+	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	if err != nil {
+		return
+	}
+
+	type args struct {
+		conn   redis.Conn
+		key    string
+		path   string
+		number int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleInt",
+			args: args{
+				conn:   conn,
+				key:    "kint",
+				path:   ".",
+				number: 5,
+			},
+			wantRes: []byte("6"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStruct",
+			args: args{
+				conn:   conn,
+				key:    "testObj",
+				path:   ".number",
+				number: 5,
+			},
+			wantRes: []byte("6"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStringNotOK",
+			args: args{
+				conn:   conn,
+				key:    "kstr",
+				path:   ".",
+				number: 5,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected a number but found string"),
+			wantErr: true,
+		},
+		{
+			name: "SimpleStructNotOK",
+			args: args{
+				conn:   conn,
+				key:    "testObj",
+				path:   ".",
+				number: 5,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected a number but found object"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONNumIncrBy(tt.args.conn, tt.args.key, tt.args.path, tt.args.number)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONNumIncrBy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONNumIncrBy() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONNumMultBy(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "kint", ".", 2, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	if err != nil {
+		return
+	}
+
+	testObj := TestObject{
+		Name:   "Item#1",
+		Number: 2,
+	}
+
+	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	if err != nil {
+		return
+	}
+
+	type args struct {
+		conn   redis.Conn
+		key    string
+		path   string
+		number int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleInt",
+			args: args{
+				conn:   conn,
+				key:    "kint",
+				path:   ".",
+				number: 5,
+			},
+			wantRes: []byte("10"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStruct",
+			args: args{
+				conn:   conn,
+				key:    "testObj",
+				path:   ".number",
+				number: 5,
+			},
+			wantRes: []byte("10"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStringNotOK",
+			args: args{
+				conn:   conn,
+				key:    "kstr",
+				path:   ".",
+				number: 5,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected a number but found string"),
+			wantErr: true,
+		},
+		{
+			name: "SimpleStructNotOK",
+			args: args{
+				conn:   conn,
+				key:    "testObj",
+				path:   ".",
+				number: 5,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected a number but found object"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONNumMultBy(tt.args.conn, tt.args.key, tt.args.path, tt.args.number)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONNumMultBy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONNumMultBy() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
