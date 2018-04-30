@@ -79,6 +79,43 @@ func commandJSONNumMultBy(argsIn ...interface{}) (argsOut []interface{}, err err
 	return
 }
 
+func commandJSONStrAppend(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	jsonstring := argsIn[2]
+	argsOut = append(argsOut, key, path, jsonstring)
+	return
+}
+
+func commandJSONStrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
+func commandJSONArrAppend(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	keys := argsIn[0]
+	path := argsIn[1]
+	values := argsIn[2:]
+	argsOut = append(argsOut, keys, path)
+	for _, value := range values {
+		jsonValue, err := json.Marshal(value)
+		if err != nil {
+			return nil, err
+		}
+		argsOut = append(argsOut, jsonValue)
+	}
+	return
+}
+
+func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
@@ -91,35 +128,25 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 			return "", nil, err
 		}
 	case "JSON.GET":
-		argsOut, err = commandJSONGet(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
+		argsOut, _ = commandJSONGet(argsIn...)
 	case "JSON.DEL":
-		argsOut, err = commandJSONDel(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
+		argsOut, _ = commandJSONDel(argsIn...)
 	case "JSON.MGET":
-		argsOut, err = commandJSONMGet(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
+		argsOut, _ = commandJSONMGet(argsIn...)
 	case "JSON.TYPE":
-		argsOut, err = commandJSONType(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
+		argsOut, _ = commandJSONType(argsIn...)
 	case "JSON.NUMINCRBY":
-		argsOut, err = commandJSONNumIncrBy(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
+		argsOut, _ = commandJSONNumIncrBy(argsIn...)
 	case "JSON.NUMMULTBY":
-		argsOut, err = commandJSONNumMultBy(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
+		argsOut, _ = commandJSONNumMultBy(argsIn...)
+	case "JSON.STRAPPEND":
+		argsOut, _ = commandJSONStrAppend(argsIn...)
+	case "JSON.STRLEN":
+		argsOut, _ = commandJSONStrLen(argsIn...)
+	case "JSON.ARRAPPEND":
+		argsOut, _ = commandJSONArrAppend(argsIn...)
+	case "JSON.ARRLEN":
+		argsOut, _ = commandJSONArrLen(argsIn...)
 	default:
 		err = fmt.Errorf("Command %s not supported by ReJSON", commandNameIn)
 		return "", nil, err
@@ -146,10 +173,7 @@ func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool,
 // 	[NOESCAPE]
 // 	[path ...]
 func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, err := CommandBuilder("JSON.GET", key, path)
-	if err != nil {
-		return nil, err
-	}
+	name, args, _ := CommandBuilder("JSON.GET", key, path)
 	return conn.Do(name, args...)
 }
 
@@ -166,49 +190,70 @@ func JSONMGet(conn redis.Conn, path string, keys ...string) (res interface{}, er
 		args = append(args, key)
 	}
 	args = append(args, path)
-	name, args, err := CommandBuilder("JSON.MGET", args...)
-	if err != nil {
-		return nil, err
-	}
+	name, args, _ := CommandBuilder("JSON.MGET", args...)
 	return conn.Do(name, args...)
 }
 
 // JSONDel to delete a json object
 // JSON.DEL <key> <path>
 func JSONDel(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, err := CommandBuilder("JSON.DEL", key, path)
-	if err != nil {
-		return nil, err
-	}
+	name, args, _ := CommandBuilder("JSON.DEL", key, path)
 	return conn.Do(name, args...)
 }
 
 // JSONType to get the type of key or member at path.
 // JSON.TYPE <key> [path]
 func JSONType(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, err := CommandBuilder("JSON.TYPE", key, path)
-	if err != nil {
-		return
-	}
+	name, args, _ := CommandBuilder("JSON.TYPE", key, path)
 	return conn.Do(name, args...)
 }
 
 // JSONNumIncrBy to increment a number by provided amount
 // JSON.NUMINCRBY <key> <path> <number>
 func JSONNumIncrBy(conn redis.Conn, key string, path string, number int) (res interface{}, err error) {
-	name, args, err := CommandBuilder("JSON.NUMINCRBY", key, path, number)
-	if err != nil {
-		return
-	}
+	name, args, _ := CommandBuilder("JSON.NUMINCRBY", key, path, number)
 	return conn.Do(name, args...)
 }
 
 // JSONNumMultBy to increment a number by provided amount
 // JSON.NUMMULTBY <key> <path> <number>
 func JSONNumMultBy(conn redis.Conn, key string, path string, number int) (res interface{}, err error) {
-	name, args, err := CommandBuilder("JSON.NUMMULTBY", key, path, number)
-	if err != nil {
-		return
+	name, args, _ := CommandBuilder("JSON.NUMMULTBY", key, path, number)
+	return conn.Do(name, args...)
+}
+
+// JSONStrAppend to append a jsonstring to an existing member
+// JSON.STRAPPEND <key> [path] <json-string>
+func JSONStrAppend(conn redis.Conn, key string, path string, jsonstring string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.STRAPPEND", key, path, jsonstring)
+	return conn.Do(name, args...)
+}
+
+// JSONStrLen to return the length of a string member
+// JSON.STRLEN <key> [path]
+func JSONStrLen(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.STRLEN", key, path)
+	return conn.Do(name, args...)
+}
+
+// JSONArrAppend to append json value into array at path
+// JSON.ARRAPPEND <key> <path> <json> [json ...]
+func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface{}) (res interface{}, err error) {
+	if len(values) == 0 {
+		err = fmt.Errorf("Need atlesat one value string as an argument")
+		return nil, err
 	}
+
+	args := make([]interface{}, 0)
+	args = append(args, key, path)
+	args = append(args, values...)
+	name, args, _ := CommandBuilder("JSON.ARRAPPEND", args...)
+	return conn.Do(name, args...)
+}
+
+// // JSONArrLen returns the length of the json array at path
+// // JSON.ARRLEN <key> [path]
+func JSONArrLen(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRLEN", key, path)
 	return conn.Do(name, args...)
 }
