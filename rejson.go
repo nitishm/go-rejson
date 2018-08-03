@@ -7,6 +7,21 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+// commandMux maps command name to a command function
+var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
+	"JSON.SET":       commandJSONSet,
+	"JSON.GET":       commandJSONGet,
+	"JSON.DEL":       commandJSONDel,
+	"JSON.MGET":      commandJSONMGet,
+	"JSON.TYPE":      commandJSONType,
+	"JSON.NUMINCRBY": commandJSONNumIncrBy,
+	"JSON.NUMMULTBY": commandJSONNumMultBy,
+	"JSON.STRAPPEND": commandJSONStrAppend,
+	"JSON.STRLEN":    commandJSONStrLen,
+	"JSON.ARRAPPEND": commandJSONArrAppend,
+	"JSON.ARRLEN":    commandJSONArrLen,
+}
+
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
@@ -120,38 +135,17 @@ func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error)
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
 func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) {
-	commandNameOut = commandNameIn
-	switch commandNameIn {
-	case "JSON.SET":
-		argsOut, err = commandJSONSet(argsIn...)
-		if err != nil {
-			return "", nil, err
-		}
-	case "JSON.GET":
-		argsOut, _ = commandJSONGet(argsIn...)
-	case "JSON.DEL":
-		argsOut, _ = commandJSONDel(argsIn...)
-	case "JSON.MGET":
-		argsOut, _ = commandJSONMGet(argsIn...)
-	case "JSON.TYPE":
-		argsOut, _ = commandJSONType(argsIn...)
-	case "JSON.NUMINCRBY":
-		argsOut, _ = commandJSONNumIncrBy(argsIn...)
-	case "JSON.NUMMULTBY":
-		argsOut, _ = commandJSONNumMultBy(argsIn...)
-	case "JSON.STRAPPEND":
-		argsOut, _ = commandJSONStrAppend(argsIn...)
-	case "JSON.STRLEN":
-		argsOut, _ = commandJSONStrLen(argsIn...)
-	case "JSON.ARRAPPEND":
-		argsOut, _ = commandJSONArrAppend(argsIn...)
-	case "JSON.ARRLEN":
-		argsOut, _ = commandJSONArrLen(argsIn...)
-	default:
-		err = fmt.Errorf("Command %s not supported by ReJSON", commandNameIn)
-		return "", nil, err
+	cmd, ok := commandMux[commandNameIn]
+	if !ok {
+		return commandNameOut, nil, fmt.Errorf("command %s not supported by ReJSON", commandNameIn)
 	}
-	return
+
+	argsOut, err = cmd(argsIn...)
+	if err != nil {
+		return commandNameOut, nil, fmt.Errorf("failed to execute command %s: %v", commandNameIn, err)
+	}
+
+	return commandNameIn, argsOut, nil
 }
 
 // JSONSet used to set a json object
