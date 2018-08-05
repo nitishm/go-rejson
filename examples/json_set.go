@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	rejson "go-rejson"
 	"log"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/nitishm/go-rejson"
 )
 
 var addr = flag.String("Server", "localhost:6379", "Redis server address")
