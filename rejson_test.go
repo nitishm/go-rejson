@@ -318,7 +318,7 @@ func TestJSONDel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONDel(tt.args.conn, tt.args.key, tt.args.path)
+			gotRes, err := JSONDel(tt.args.conn, tt.args.key)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONDel() error = %v, wantErr %v", err, tt.wantErr)
 				return

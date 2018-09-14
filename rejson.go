@@ -190,8 +190,8 @@ func JSONMGet(conn redis.Conn, path string, keys ...string) (res interface{}, er
 
 // JSONDel to delete a json object
 // JSON.DEL <key> <path>
-func JSONDel(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, _ := CommandBuilder("JSON.DEL", key, path)
+func JSONDel(conn redis.Conn, key string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.DEL", key)
 	return conn.Do(name, args...)
 }
 
