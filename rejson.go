@@ -52,7 +52,10 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
+	options := argsIn[2:]
+	argsOut = append(argsOut, key)
+	argsOut = append(argsOut, options...)
+	argsOut = append(argsOut, path)
 	return
 }
 
@@ -166,8 +169,14 @@ func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool,
 // 		[SPACE space-string]
 // 	[NOESCAPE]
 // 	[path ...]
-func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, _ := CommandBuilder("JSON.GET", key, path)
+func JSONGet(conn redis.Conn, key string, path string, options ...string) (res interface{}, err error) {
+	args := make([]interface{}, 0)
+	args=append(args, key)
+	args=append(args, path)
+	for _, option := range options {
+		args = append(args, option)
+	}
+	name, args, _ := CommandBuilder("JSON.GET", args...)
 	return conn.Do(name, args...)
 }
 
