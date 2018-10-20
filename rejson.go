@@ -20,6 +20,14 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.STRLEN":    commandJSONStrLen,
 	"JSON.ARRAPPEND": commandJSONArrAppend,
 	"JSON.ARRLEN":    commandJSONArrLen,
+	"JSON.ARRINDEX":  commandJSONArrIndex,
+	"JSON.ARRPOP":    commandJSONArrPop,
+	"JSON.ARRTRIM":   commandJSONArrTrim,
+	"JSON.OBJKEYS":   commandJSONObjKeys,
+	"JSON.OBJLEN":    commandJSONObjLen,
+	"JSON.DEBUG":     commandJSONDebug,
+	"JSON.FORGET":    commandJSONDel,
+	"JSON.RESP":      commandJSONResp,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -128,6 +136,63 @@ func commandJSONArrAppend(argsIn ...interface{}) (argsOut []interface{}, err err
 }
 
 func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
+func commandJSONArrIndex(argsIn ...interface{})(argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	scalar := argsIn[2]
+	start := argsIn[3]
+	stop := argsIn[4]
+	argsOut = append(argsOut, key, path, scalar, start, stop)
+	return
+}
+
+func commandJSONArrPop(argsIn ...interface{})(argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	index := argsIn[2]
+	argsOut = append(argsOut, key, path, index)
+	return
+}
+
+
+func commandJSONArrTrim(argsIn ...interface{})(argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	start := argsIn[2]
+	stop := argsIn[3]
+	argsOut = append(argsOut, key, path, start, stop)
+	return
+}
+
+func commandJSONObjKeys(argsIn ...interface{})(argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
+func commandJSONObjLen(argsIn ...interface{})(argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
+func commandJSONDebug(argsIn ...interface{})(argsOut []interface{}, err error) {
+	subCommand := argsIn[0]
+	arguments := argsIn[1:]
+	argsOut = append(argsOut,subCommand)
+	argsOut = append(argsOut,arguments...)
+	return
+}
+
+func commandJSONResp(argsIn ...interface{})(argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
@@ -259,4 +324,69 @@ func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface
 func JSONArrLen(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, _ := CommandBuilder("JSON.ARRLEN", key, path)
 	return conn.Do(name, args...)
+}
+
+//JSON.ARRINDEX return the position of the scalar value in the array, or -1 if unfound.
+//JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
+//The optional inclusive start (default 0) and exclusive stop (default 0, meaning that the last element is included) specify a slice of the array to search.
+func JSONArrIndex(conn redis.Conn, key string, path string, scalar interface{}, start int, stop int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRINDEX", key, path, scalar, start, stop)
+	return conn.Do(name,args...)
+}
+
+//JSON.ARRPOP Remove and return element from the index in the array.
+//JSON.ARRPOP <key> [path [index]]
+//index is the position in the array to start popping from (defaults to -1, meaning the last element).
+func JSONArrPop(conn redis.Conn, key string, path string, index int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRPOP", key, path,index)
+	return conn.Do(name,args...)
+}
+
+//JSON.ARRTRIM Trim an array so that it contains only the specified inclusive range of elements.
+//JSON.ARRTRIM <key> <path> <start> <stop>
+func JSONArrTrim(conn redis.Conn, key string, path string, start int, stop int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRTRIM", key, path, start, stop)
+	return conn.Do(name,args...)
+}
+
+//JSON.OBJKEYS Return the keys in the object that's referenced by path.
+//JSON.OBJKEYS <key> [path]
+func JSONObjKeys(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.OBJKEYS", key, path)
+	return conn.Do(name,args...)
+}
+
+//JSON.OBJLEN Report the number of keys in the JSON Object at path in key.
+//JSON.OBJLEN  <key> [path]
+func JSONObjLen(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.OBJLEN", key, path)
+	return conn.Do(name,args...)
+}
+
+//JSON.DEBUG Supported subcommands are:
+//MEMORY <key> [path] - report the memory usage in bytes of a value. path defaults to root if not provided.
+// returns an integer, specifically the size in bytes of the value
+//HELP - reply with a helpful message.returns an array, specifically with the help message
+//JSON.DEBUG <subcommand & arguments>
+func JSONDebug(conn redis.Conn,subCommand string,arguments ...string) (res interface{}, err error) {
+	args := make([]interface{}, 0)
+	args=append(args, subCommand)
+	for _, option := range arguments {
+		args = append(args, option)
+	}
+	name, args, _ := CommandBuilder("JSON.DEBUG",args...)
+	return conn.Do(name,args...)
+}
+
+//JSON.FORGET An alias for JSON.DEL.
+func JSONForget(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.FORGET", key, path)
+	return conn.Do(name, args...)
+}
+
+//JSON.RESP Return the JSON in key in Redis Serialization Protocol (RESP).
+//JSON.RESP <key> [path]
+func JSONResp(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.RESP", key, path)
+	return conn.Do(name,args...)
 }
