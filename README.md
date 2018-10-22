@@ -28,14 +28,14 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 - [x] [JSON.STRLEN](http://rejson.io/commands/#jsonstrlen)
 - [x] [JSON.ARRAPPEND](http://rejson.io/commands/#jsonarrappend)
 - [x] [JSON.ARRLEN](http://rejson.io/commands/#jsonarrlen)
-- [ ] [JSON.ARRINDEX](http://rejson.io/commands/#jsonarrindex)
-- [ ] [JSON.ARRPOP](http://rejson.io/commands/#jsonarrpop)
-- [ ] [JSON.ARRTRIM](http://rejson.io/commands/#jsonarrtrim)
-- [ ] [JSON.OBJKEYS](http://rejson.io/commands/#jsonobjkeys)
-- [ ] [JSON.OBJLEN](http://rejson.io/commands/#jsonobjlen)
-- [ ] [JSON.DEBUG](http://rejson.io/commands/#jsondebug)
-- [ ] [JSON.FORGET](http://rejson.io/commands/#jsonforget)
-- [ ] [JSON.RESP](http://rejson.io/commands/#jsonresp)
+- [x] [JSON.ARRINDEX](http://rejson.io/commands/#jsonarrindex)
+- [x] [JSON.ARRPOP](http://rejson.io/commands/#jsonarrpop)
+- [x] [JSON.ARRTRIM](http://rejson.io/commands/#jsonarrtrim)
+- [x] [JSON.OBJKEYS](http://rejson.io/commands/#jsonobjkeys)
+- [x] [JSON.OBJLEN](http://rejson.io/commands/#jsonobjlen)
+- [x] [JSON.DEBUG](http://rejson.io/commands/#jsondebug)
+- [x] [JSON.FORGET](http://rejson.io/commands/#jsonforget)
+- [x] [JSON.RESP](http://rejson.io/commands/#jsonresp)
 
 ## Example usage
 ```golang
