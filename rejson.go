@@ -7,6 +7,9 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+// PopArrLast gives index of the last element for JSONArrPop
+const PopArrLast = -1
+
 // commandMux maps command name to a command function
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
 	"JSON.SET":       commandJSONSet,
@@ -20,6 +23,10 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.STRLEN":    commandJSONStrLen,
 	"JSON.ARRAPPEND": commandJSONArrAppend,
 	"JSON.ARRLEN":    commandJSONArrLen,
+	"JSON.ARRPOP":    commandJSONArrPop,
+	"JSON.ARRINDEX":  commandJSONArrIndex,
+	"JSON.ARRTRIM":   commandJSONArrTrim,
+	"JSON.ARRINSERT": commandJSONArrInsert,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -128,6 +135,64 @@ func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error)
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
+	return
+}
+
+func commandJSONArrPop(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	index := argsIn[2]
+
+	argsOut = append(argsOut, key, path)
+	if index.(int) != PopArrLast {
+		argsOut = append(argsOut, index)
+	}
+	return
+}
+
+func commandJSONArrIndex(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	jsonValue, err := json.Marshal(argsIn[2])
+	if err != nil {
+		return nil, err
+	}
+	argsOut = append(argsOut, key, path, jsonValue)
+
+	ln := len(argsIn)
+	if ln >= 4 { // start is present
+		start := argsIn[3]
+		argsOut = append(argsOut, start)
+		if ln == 5 { // both start and end are present
+			end := argsIn[4]
+			argsOut = append(argsOut, end)
+		}
+	}
+	return
+}
+
+func commandJSONArrInsert(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	keys := argsIn[0]
+	path := argsIn[1]
+	index := argsIn[2]
+	values := argsIn[3:]
+	argsOut = append(argsOut, keys, path, index)
+	for _, value := range values {
+		jsonValue, err := json.Marshal(value)
+		if err != nil {
+			return nil, err
+		}
+		argsOut = append(argsOut, jsonValue)
+	}
+	return
+}
+
+func commandJSONArrTrim(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	start := argsIn[2]
+	end := argsIn[3]
+	argsOut = append(argsOut, key, path, start, end)
 	return
 }
 
@@ -245,9 +310,56 @@ func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface
 	return conn.Do(name, args...)
 }
 
-// // JSONArrLen returns the length of the json array at path
-// // JSON.ARRLEN <key> [path]
+// JSONArrLen returns the length of the json array at path
+// JSON.ARRLEN <key> [path]
 func JSONArrLen(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, _ := CommandBuilder("JSON.ARRLEN", key, path)
+	return conn.Do(name, args...)
+}
+
+// JSONArrPop removes and returns element from the index in the array
+// to pop last element use rejson.PopArrLast
+// JSON.ARRPOP <key> [path [index]]
+func JSONArrPop(conn redis.Conn, key, path string, index int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRPOP", key, path, index)
+	return conn.Do(name, args...)
+}
+
+// JSONArrIndex returns the index of the json element provided and return -1 if element is not present
+// JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
+func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
+	args := []interface{}{key, path, jsonValue}
+
+	ln := len(optionalRange)
+	if ln > 2 {
+		return nil, fmt.Errorf("Need atmost two integeral value as an argument representing array range")
+	} else if ln == 1 { // only inclusive start is present
+		args = append(args, optionalRange[0])
+	} else if ln == 2 { // both inclusive start and exclusive end are present
+		args = append(args, optionalRange[0], optionalRange[1])
+	}
+	name, args, _ := CommandBuilder("JSON.ARRINDEX", args...)
+	return conn.Do(name, args...)
+}
+
+// JSONArrTrim trims an array so that it contains only the specified inclusive range of elements
+// JSON.ARRTRIM <key> <path> <start> <stop>
+func JSONArrTrim(conn redis.Conn, key, path string, start, end int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRTRIM", key, path, start, end)
+	return conn.Do(name, args...)
+}
+
+// JSONArrInsert inserts the json value(s) into the array at path before the index (shifts to the right).
+// JSON.ARRINSERT <key> <path> <index> <json> [json ...]
+func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...interface{}) (res interface{}, err error) {
+	if len(values) == 0 {
+		err = fmt.Errorf("Need atlesat one value string as an argument")
+		return nil, err
+	}
+
+	args := make([]interface{}, 0)
+	args = append(args, key, path, index)
+	args = append(args, values...)
+	name, args, _ := CommandBuilder("JSON.ARRINSERT", args...)
 	return conn.Do(name, args...)
 }
