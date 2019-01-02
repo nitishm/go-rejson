@@ -1108,7 +1108,6 @@ func TestJSONArrPop(t *testing.T) {
 		key    string
 		path   string
 		index  int
-		values []interface{}
 	}
 	tests := []struct {
 		name    string
