@@ -1285,3 +1285,83 @@ func TestJSONArrIndex(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONArrTrim(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	values := make([]interface{}, 0)
+	valuesStr := []string{"one", "two", "three", "four"}
+	for _, value := range valuesStr {
+		values = append(values, value)
+	}
+	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+
+	type args struct {
+		conn  redis.Conn
+		key   string
+		path  string
+		start int
+		end   int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleArray",
+			args: args{
+				conn:  conn,
+				key:   "karr",
+				path:  ".",
+				start: 1,
+				end:   2,
+			},
+			wantRes: int64(2),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStringNotOK",
+			args: args{
+				conn:  conn,
+				key:   "kstr",
+				path:  ".",
+				start: 1,
+				end:   2,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			gotRes, err := JSONArrTrim(tt.args.conn, tt.args.key, tt.args.path, tt.args.start, tt.args.end)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONArrTrim() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONArrTrim() = %v, want %v", gotRes, tt.wantRes)
+			}
+
+		})
+	}
+}

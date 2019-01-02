@@ -104,4 +104,23 @@ func main() {
 	}
 	fmt.Println("\"ten\" not found:", res)
 
+	res, err = rejson.JSONArrTrim(conn, "arr", ".", 1, 2)
+	if err != nil {
+		log.Fatalf("Failed to JSONArrTrim", err)
+		return
+	}
+	fmt.Println("no. of elements left:", res)
+
+	res, err = rejson.JSONGet(conn, "arr", ".")
+	if err != nil {
+		log.Fatalf("Failed to JSONGet")
+		return
+	}
+	err = json.Unmarshal(res.([]byte), &ArrOut)
+	if err != nil {
+		log.Fatalf("Failed to JSON Unmarshal")
+		return
+	}
+	fmt.Println("arr after trimming to [1,2]:", ArrOut)
+
 }

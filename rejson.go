@@ -25,6 +25,7 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.ARRLEN":    commandJSONArrLen,
 	"JSON.ARRPOP":    commandJSONArrPop,
 	"JSON.ARRINDEX":  commandJSONArrIndex,
+	"JSON.ARRTRIM":   commandJSONArrTrim,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -166,6 +167,15 @@ func commandJSONArrIndex(argsIn ...interface{}) (argsOut []interface{}, err erro
 			argsOut = append(argsOut, end)
 		}
 	}
+	return
+}
+
+func commandJSONArrTrim(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	start := argsIn[2]
+	end := argsIn[3]
+	argsOut = append(argsOut, key, path, start, end)
 	return
 }
 
@@ -312,5 +322,12 @@ func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, opti
 		args = append(args, optionalRange[0], optionalRange[1])
 	}
 	name, args, _ := CommandBuilder("JSON.ARRINDEX", args...)
+	return conn.Do(name, args...)
+}
+
+// JSONArrTrim trims an array so that it contains only the specified inclusive range of elements
+// JSON.ARRTRIM <key> <path> <start> <stop>
+func JSONArrTrim(conn redis.Conn, key, path string, start, end int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRTRIM", key, path, start, end)
 	return conn.Do(name, args...)
 }
