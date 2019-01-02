@@ -1365,3 +1365,109 @@ func TestJSONArrTrim(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONArrInsert(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	values := make([]interface{}, 0)
+	valuesStr := []string{"three"}
+	for _, value := range valuesStr {
+		values = append(values, value)
+	}
+	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	if err != nil {
+		return
+	}
+	insertValues := make([]interface{}, 0)
+	valuesInsertStr := []string{"one", "two"}
+	for _, valueAppend := range valuesInsertStr {
+		insertValues = append(insertValues, valueAppend)
+	}
+
+	finalStrSlice := make([]string, 0, 4)
+	finalStrSlice = append(finalStrSlice, valuesInsertStr...)
+	finalStrSlice = append(finalStrSlice, valuesStr...)
+
+	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+
+	fssM, err := json.Marshal(finalStrSlice)
+	if err != nil {
+		return
+	}
+
+	type args struct {
+		conn   redis.Conn
+		key    string
+		path   string
+		index  int
+		values []interface{}
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantRes       interface{}
+		wantErr       bool
+		finalSliceGot []byte
+	}{
+		{
+			name: "SimpleArray",
+			args: args{
+				conn:   conn,
+				key:    "karr",
+				path:   ".",
+				index:  0,
+				values: insertValues,
+			},
+			wantRes:       int64(3),
+			wantErr:       false,
+			finalSliceGot: fssM,
+		},
+		{
+			name: "SimpleStringNotOK",
+			args: args{
+				conn:   conn,
+				key:    "kstr",
+				path:   ".",
+				index:  0,
+				values: insertValues,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONArrInsert(tt.args.conn, tt.args.key, tt.args.path, tt.args.index, tt.args.values...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONArrInsert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONArrInsert() = %v, want %v", gotRes, tt.wantRes)
+				return
+			}
+
+			if !tt.wantErr {
+				newArr, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path)
+				if err != nil {
+					t.Errorf("JSONArrGet(): Failed to JSONGet")
+					return
+				}
+				if !reflect.DeepEqual(newArr.([]byte), tt.finalSliceGot) {
+					t.Errorf("JSONArrGet() = %v, want %v", newArr.([]byte), tt.finalSliceGot)
+				}
+			}
+		})
+	}
+}

@@ -123,4 +123,22 @@ func main() {
 	}
 	fmt.Println("arr after trimming to [1,2]:", ArrOut)
 
+	res, err = rejson.JSONArrInsert(conn, "arr", ".", 0, "one")
+	if err != nil {
+		log.Fatalf("Failed to JSONArrInsert", err)
+		return
+	}
+	fmt.Println("no. of elements:", res)
+
+	res, err = rejson.JSONGet(conn, "arr", ".")
+	if err != nil {
+		log.Fatalf("Failed to JSONGet")
+		return
+	}
+	err = json.Unmarshal(res.([]byte), &ArrOut)
+	if err != nil {
+		log.Fatalf("Failed to JSON Unmarshal")
+		return
+	}
+	fmt.Println("arr after inserting \"one\":", ArrOut)
 }

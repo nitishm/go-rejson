@@ -26,6 +26,7 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.ARRPOP":    commandJSONArrPop,
 	"JSON.ARRINDEX":  commandJSONArrIndex,
 	"JSON.ARRTRIM":   commandJSONArrTrim,
+	"JSON.ARRINSERT": commandJSONArrInsert,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -166,6 +167,22 @@ func commandJSONArrIndex(argsIn ...interface{}) (argsOut []interface{}, err erro
 			end := argsIn[4]
 			argsOut = append(argsOut, end)
 		}
+	}
+	return
+}
+
+func commandJSONArrInsert(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	keys := argsIn[0]
+	path := argsIn[1]
+	index := argsIn[2]
+	values := argsIn[3:]
+	argsOut = append(argsOut, keys, path, index)
+	for _, value := range values {
+		jsonValue, err := json.Marshal(value)
+		if err != nil {
+			return nil, err
+		}
+		argsOut = append(argsOut, jsonValue)
 	}
 	return
 }
@@ -329,5 +346,20 @@ func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, opti
 // JSON.ARRTRIM <key> <path> <start> <stop>
 func JSONArrTrim(conn redis.Conn, key, path string, start, end int) (res interface{}, err error) {
 	name, args, _ := CommandBuilder("JSON.ARRTRIM", key, path, start, end)
+	return conn.Do(name, args...)
+}
+
+// JSONArrInsert inserts the json value(s) into the array at path before the index (shifts to the right).
+// JSON.ARRINSERT <key> <path> <index> <json> [json ...]
+func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...interface{}) (res interface{}, err error) {
+	if len(values) == 0 {
+		err = fmt.Errorf("Need atlesat one value string as an argument")
+		return nil, err
+	}
+
+	args := make([]interface{}, 0)
+	args = append(args, key, path, index)
+	args = append(args, values...)
+	name, args, _ := CommandBuilder("JSON.ARRINSERT", args...)
 	return conn.Do(name, args...)
 }
