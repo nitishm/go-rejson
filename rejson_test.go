@@ -1,6 +1,7 @@
 package rejson
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -1071,6 +1072,101 @@ func TestJSONArrLen(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONArrLen() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONArrPop(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	values := make([]interface{}, 0)
+	valuesStr := []string{"one", "two", "three", "four"}
+	for _, value := range valuesStr {
+		values = append(values, value)
+	}
+	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+
+	type args struct {
+		conn   redis.Conn
+		key    string
+		path   string
+		index  int
+		values []interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleArrayLastPop",
+			args: args{
+				conn:  conn,
+				key:   "karr",
+				path:  ".",
+				index: PopArrLast,
+			},
+			wantRes: string("four"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleArray2ndElementPop",
+			args: args{
+				conn:  conn,
+				key:   "karr",
+				path:  ".",
+				index: 1,
+			},
+			wantRes: "two",
+			wantErr: false,
+		},
+		{
+			name: "SimpleStringNotOK",
+			args: args{
+				conn:  conn,
+				key:   "kstr",
+				path:  ".",
+				index: PopArrLast,
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := JSONArrPop(tt.args.conn, tt.args.key, tt.args.path, tt.args.index)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONArrPop() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				var gotRes interface{}
+				err = json.Unmarshal(res.([]byte), &gotRes)
+				if err != nil {
+					t.Errorf("JSONArrPop(): Failed to JSON Unmarshal")
+					return
+				}
+				if !reflect.DeepEqual(gotRes, tt.wantRes) {
+					t.Errorf("JSONArrPop() = %v, want %v", gotRes, tt.wantRes)
+				}
 			}
 		})
 	}

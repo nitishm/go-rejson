@@ -7,6 +7,9 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+// PopArrLast gives index of the last element for JSONArrPop
+const PopArrLast = -1
+
 // commandMux maps command name to a command function
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
 	"JSON.SET":       commandJSONSet,
@@ -20,6 +23,7 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.STRLEN":    commandJSONStrLen,
 	"JSON.ARRAPPEND": commandJSONArrAppend,
 	"JSON.ARRLEN":    commandJSONArrLen,
+	"JSON.ARRPOP":    commandJSONArrPop,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -128,6 +132,18 @@ func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error)
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
+	return
+}
+
+func commandJSONArrPop(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	index := argsIn[2]
+
+	argsOut = append(argsOut, key, path)
+	if index.(int) != PopArrLast {
+		argsOut = append(argsOut, index)
+	}
 	return
 }
 
@@ -245,9 +261,17 @@ func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface
 	return conn.Do(name, args...)
 }
 
-// // JSONArrLen returns the length of the json array at path
-// // JSON.ARRLEN <key> [path]
+// JSONArrLen returns the length of the json array at path
+// JSON.ARRLEN <key> [path]
 func JSONArrLen(conn redis.Conn, key string, path string) (res interface{}, err error) {
 	name, args, _ := CommandBuilder("JSON.ARRLEN", key, path)
+	return conn.Do(name, args...)
+}
+
+// JSONArrPop removes and returns element from the index in the array
+// to pop last element use rejson.PopArrLast
+// JSON.ARRPOP <key> [path [index]]
+func JSONArrPop(conn redis.Conn, key, path string, index int) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.ARRPOP", key, path, index)
 	return conn.Do(name, args...)
 }
