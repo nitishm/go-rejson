@@ -24,6 +24,7 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.ARRAPPEND": commandJSONArrAppend,
 	"JSON.ARRLEN":    commandJSONArrLen,
 	"JSON.ARRPOP":    commandJSONArrPop,
+	"JSON.ARRINDEX":  commandJSONArrIndex,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -143,6 +144,27 @@ func commandJSONArrPop(argsIn ...interface{}) (argsOut []interface{}, err error)
 	argsOut = append(argsOut, key, path)
 	if index.(int) != PopArrLast {
 		argsOut = append(argsOut, index)
+	}
+	return
+}
+
+func commandJSONArrIndex(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	jsonValue, err := json.Marshal(argsIn[2])
+	if err != nil {
+		return nil, err
+	}
+	argsOut = append(argsOut, key, path, jsonValue)
+
+	ln := len(argsIn)
+	if ln >= 4 { // start is present
+		start := argsIn[3]
+		argsOut = append(argsOut, start)
+		if ln == 5 { // both start and end are present
+			end := argsIn[4]
+			argsOut = append(argsOut, end)
+		}
 	}
 	return
 }
