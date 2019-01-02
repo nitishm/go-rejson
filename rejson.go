@@ -275,3 +275,20 @@ func JSONArrPop(conn redis.Conn, key, path string, index int) (res interface{}, 
 	name, args, _ := CommandBuilder("JSON.ARRPOP", key, path, index)
 	return conn.Do(name, args...)
 }
+
+// JSONArrIndex returns the index of the json element provided and return -1 if element is not present
+// JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
+func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
+	args := []interface{}{key, path, jsonValue}
+
+	ln := len(optionalRange)
+	if ln > 2 {
+		return nil, fmt.Errorf("Need atmost two integeral value as an argument representing array range")
+	} else if ln == 1 { // only inclusive start is present
+		args = append(args, optionalRange[0])
+	} else if ln == 2 { // both inclusive start and exclusive end are present
+		args = append(args, optionalRange[0], optionalRange[1])
+	}
+	name, args, _ := CommandBuilder("JSON.ARRINDEX", args...)
+	return conn.Do(name, args...)
+}

@@ -83,4 +83,25 @@ func main() {
 	}
 	fmt.Println("Length:", res)
 
+	res, err = rejson.JSONArrIndex(conn, "arr", ".", "one")
+	if err != nil {
+		log.Fatalf("Failed to JSONArrIndex", err)
+		return
+	}
+	fmt.Println("Index of \"one\":", res)
+
+	res, err = rejson.JSONArrIndex(conn, "arr", ".", "three", 3, 10)
+	if err != nil {
+		log.Fatalf("Failed to JSONArrIndex", err)
+		return
+	}
+	fmt.Println("Out of range:", res)
+
+	res, err = rejson.JSONArrIndex(conn, "arr", ".", "ten")
+	if err != nil {
+		log.Fatalf("Failed to JSONArrIndex", err)
+		return
+	}
+	fmt.Println("\"ten\" not found:", res)
+
 }
