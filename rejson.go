@@ -44,7 +44,7 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	argsOut = append(argsOut, b)
 
 	if NX && XX {
-		err = fmt.Errorf("Both NX and XX cannot be true")
+		err = fmt.Errorf("both NX and XX cannot be true")
 		return nil, err
 	}
 
@@ -240,7 +240,7 @@ func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err err
 // JSON.MGET <key> [key ...] <path>
 func JSONMGet(conn redis.Conn, path string, keys ...string) (res interface{}, err error) {
 	if len(keys) == 0 {
-		err = fmt.Errorf("Need atlesat one key as an argument")
+		err = fmt.Errorf("need atlesat one key as an argument")
 		return nil, err
 	}
 
@@ -299,7 +299,7 @@ func JSONStrLen(conn redis.Conn, key string, path string) (res interface{}, err 
 // JSON.ARRAPPEND <key> <path> <json> [json ...]
 func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface{}) (res interface{}, err error) {
 	if len(values) == 0 {
-		err = fmt.Errorf("Need atlesat one value string as an argument")
+		err = fmt.Errorf("need atlesat one value string as an argument")
 		return nil, err
 	}
 
@@ -332,7 +332,7 @@ func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, opti
 
 	ln := len(optionalRange)
 	if ln > 2 {
-		return nil, fmt.Errorf("Need atmost two integeral value as an argument representing array range")
+		return nil, fmt.Errorf("need atmost two integeral value as an argument representing array range")
 	} else if ln == 1 { // only inclusive start is present
 		args = append(args, optionalRange[0])
 	} else if ln == 2 { // both inclusive start and exclusive end are present
@@ -353,7 +353,7 @@ func JSONArrTrim(conn redis.Conn, key, path string, start, end int) (res interfa
 // JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...interface{}) (res interface{}, err error) {
 	if len(values) == 0 {
-		err = fmt.Errorf("Need atlesat one value string as an argument")
+		err = fmt.Errorf("need atlesat one value string as an argument")
 		return nil, err
 	}
 
