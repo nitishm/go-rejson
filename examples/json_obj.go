@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
 	}
 	defer func() {
-		//conn.Do("FLUSHALL")
+		conn.Do("FLUSHALL")
 		conn.Close()
 	}()
 
@@ -30,11 +30,6 @@ func main() {
 	}
 
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	//jobj, err := json.Marshal(obj)
-	//if err != nil {
-	//	log.Fatalf("Failed to JSON Marshal")
-	//	return
-	//}
 	res, err := rejson.JSONSet(conn, "obj", ".", obj, false, false)
 	if err != nil {
 		log.Fatalf("Failed to JSONSet")

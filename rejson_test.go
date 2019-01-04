@@ -2,6 +2,7 @@ package rejson
 
 import (
 	"encoding/json"
+	"github.com/nitishm/go-rejson"
 	"reflect"
 	"testing"
 
@@ -1104,10 +1105,10 @@ func TestJSONArrPop(t *testing.T) {
 	}
 
 	type args struct {
-		conn   redis.Conn
-		key    string
-		path   string
-		index  int
+		conn  redis.Conn
+		key   string
+		path  string
+		index int
 	}
 	tests := []struct {
 		name    string
@@ -1466,6 +1467,150 @@ func TestJSONArrInsert(t *testing.T) {
 				if !reflect.DeepEqual(newArr.([]byte), tt.finalSliceGot) {
 					t.Errorf("JSONArrGet() = %v, want %v", newArr.([]byte), tt.finalSliceGot)
 				}
+			}
+		})
+	}
+}
+
+func TestJSONObjLen(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	type Object struct {
+		Name      string `json:"name"`
+		LastSeen  int64  `json:"lastSeen"`
+		LoggedOut bool   `json:"loggedOut"`
+	}
+	obj := Object{"Leonard Cohen", 1478476800, true}
+	_, err = rejson.JSONSet(conn, "tobj", ".", obj, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn redis.Conn
+		key  string
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleObject",
+			args: args{
+				conn: conn,
+				key:  "tobj",
+				path: ".",
+			},
+			wantRes: int64(3),
+			wantErr: false,
+		},
+		{
+			name: "SimpleString",
+			args: args{
+				conn: conn,
+				key:  "tstr",
+				path: ".",
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONObjLen(tt.args.conn, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONObjLen() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONObjLen() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONObjKeys(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	type Object struct {
+		Name      string `json:"name"`
+		LastSeen  int64  `json:"lastSeen"`
+		LoggedOut bool   `json:"loggedOut"`
+	}
+	obj := Object{"Leonard Cohen", 1478476800, true}
+	_, err = rejson.JSONSet(conn, "tobj", ".", obj, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn redis.Conn
+		key  string
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleObject",
+			args: args{
+				conn: conn,
+				key:  "tobj",
+				path: ".",
+			},
+			wantRes: []string{"name", "lastSeen", "loggedOut"},
+			wantErr: false,
+		},
+		{
+			name: "SimpleString",
+			args: args{
+				conn: conn,
+				key:  "tstr",
+				path: ".",
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONObjKeys(tt.args.conn, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONObjKeys() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONObjKeys() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
