@@ -27,6 +27,8 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.ARRINDEX":  commandJSONArrIndex,
 	"JSON.ARRTRIM":   commandJSONArrTrim,
 	"JSON.ARRINSERT": commandJSONArrInsert,
+	"JSON.OBJKEYS": commandJSONObj,
+	"JSON.OBJLEN": commandJSONObj,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -196,6 +198,14 @@ func commandJSONArrTrim(argsIn ...interface{}) (argsOut []interface{}, err error
 	return
 }
 
+func commandJSONObj(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	argsOut = append(argsOut, key, path)
+	return
+}
+
+
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
@@ -362,4 +372,41 @@ func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...inter
 	args = append(args, values...)
 	name, args, _ := CommandBuilder("JSON.ARRINSERT", args...)
 	return conn.Do(name, args...)
+}
+
+// JSONObjKeys returns the keys in the object that's referenced by path
+// JSON.OBJKEYS <key> [path]
+func JSONObjKeys(conn redis.Conn, key, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.OBJKEYS", key, path)
+	res, err = conn.Do(name, args...)
+	if err != nil {
+		return
+	}
+	// JSON.OBJKEYS returns slice of string as slice of uint8
+	slc := make([]string, 0, 10)
+	for _, r := range res.([]interface{}) {
+		slc = append(slc, tostring(r))
+	}
+	res = slc
+	return
+}
+
+// JSONObjLen report the number of keys in the JSON Object at path in key
+// JSON.OBJLEN <key> [path]
+func JSONObjLen(conn redis.Conn, key, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.OBJLEN", key, path)
+	return conn.Do(name, args...)
+}
+
+// tostring converts each byte in slice into character, else panic out
+func tostring(lst interface{}) (str string) {
+	_lst, ok := lst.([]byte)
+	if !ok {
+		panic("error: something went wrong")
+		return
+	}
+	for _, s := range _lst {
+		str += string(s)
+	}
+	return
 }
