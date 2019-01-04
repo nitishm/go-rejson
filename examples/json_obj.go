@@ -64,4 +64,17 @@ func main() {
 	}
 	fmt.Println("keys:",res)
 
+
+	res, err= rejson.JSONDebug(conn, rejson.DebugHelpSubcommand, "obj", ".")
+	if err != nil {
+		log.Fatalf("Failed to JSONDebug")
+		return
+	}
+	fmt.Println(res)
+	res, err= rejson.JSONDebug(conn, rejson.DebugMemorySubcommand, "obj", ".")
+	if err != nil {
+		log.Fatalf("Failed to JSONDebug")
+		return
+	}
+	fmt.Println("\nMemory used by obj:", res)
 }

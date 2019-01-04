@@ -3,12 +3,20 @@ package rejson
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gomodule/redigo/redis"
 )
 
-// PopArrLast gives index of the last element for JSONArrPop
-const PopArrLast = -1
+const (
+	// PopArrLast gives index of the last element for JSONArrPop
+	PopArrLast = -1
+	// DebugMemorySubcommand & DebugHelpSubcommand provide the corresponding sub commands for JSONDebug
+	DebugMemorySubcommand = "MEMORY"
+	DebugHelpSubcommand   = "HELP"
+	// DebugHelpOutput is the ouput of command JSON.Debug HELP <obj> [path]
+	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
+)
 
 // commandMux maps command name to a command function
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
@@ -27,8 +35,9 @@ var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, 
 	"JSON.ARRINDEX":  commandJSONArrIndex,
 	"JSON.ARRTRIM":   commandJSONArrTrim,
 	"JSON.ARRINSERT": commandJSONArrInsert,
-	"JSON.OBJKEYS": commandJSONObj,
-	"JSON.OBJLEN": commandJSONObj,
+	"JSON.OBJKEYS":   commandJSONObj,
+	"JSON.OBJLEN":    commandJSONObj,
+	"JSON.DEBUG":     commandJSONDebug,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -205,6 +214,13 @@ func commandJSONObj(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	subcommand := argsIn[0]
+	key := argsIn[1]
+	path := argsIn[2]
+	argsOut = append(argsOut, subcommand, key, path)
+	return
+}
 
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
@@ -398,12 +414,38 @@ func JSONObjLen(conn redis.Conn, key, path string) (res interface{}, err error) 
 	return conn.Do(name, args...)
 }
 
+// JSONDebug reports information
+// JSON.DEBUG <subcommand & arguments>
+//		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
+//		JSON.DEBUG HELP					- reply with a helpful message
+func JSONDebug(conn redis.Conn, subcommand, key, path string) (res interface{}, err error) {
+	if subcommand != DebugMemorySubcommand && subcommand != DebugHelpSubcommand {
+		err = fmt.Errorf("unknown subcommand - try `JSON.DEBUG HELP`")
+		return
+	}
+	name, args, _ := CommandBuilder("JSON.DEBUG", subcommand, key, path)
+	res, err = conn.Do(name, args...)
+	if err != nil {
+		return
+	}
+	// JSONDebugMemorySubcommand returns an integer representing memory usage
+	if subcommand == DebugMemorySubcommand {
+		return res.(int64), err
+	}
+	// JSONDebugHelpSubcommand returns slice of string of Help as slice of uint8
+	hlp := make([]string, 0, 10)
+	for _, r := range res.([]interface{}) {
+		hlp = append(hlp, tostring(r))
+	}
+	res = strings.Join(hlp, "\n")
+	return
+}
+
 // tostring converts each byte in slice into character, else panic out
 func tostring(lst interface{}) (str string) {
 	_lst, ok := lst.([]byte)
 	if !ok {
 		panic("error: something went wrong")
-		return
 	}
 	for _, s := range _lst {
 		str += string(s)

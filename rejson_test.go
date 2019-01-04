@@ -1615,3 +1615,67 @@ func TestJSONObjKeys(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONDebug(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn       redis.Conn
+		subCommand string
+		key        string
+		path       string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "Debug Help",
+			args: args{
+				conn:       conn,
+				subCommand: DebugHelpSubcommand,
+				key:        "tstr",
+				path:       ".",
+			},
+			wantRes: DebugHelpOutput,
+			wantErr: false,
+		},
+		{
+			name: "Debug Memory",
+			args: args{
+				conn:       conn,
+				subCommand: DebugMemorySubcommand,
+				key:        "tstr",
+				path:       ".",
+			},
+			wantRes: int64(36),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONDebug(tt.args.conn, tt.args.subCommand, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONDebug() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONDebug() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
