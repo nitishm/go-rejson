@@ -2,7 +2,6 @@ package rejson
 
 import (
 	"encoding/json"
-	"github.com/nitishm/go-rejson"
 	"reflect"
 	"testing"
 
@@ -1489,7 +1488,7 @@ func TestJSONObjLen(t *testing.T) {
 		LoggedOut bool   `json:"loggedOut"`
 	}
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	_, err = rejson.JSONSet(conn, "tobj", ".", obj, false, false)
+	_, err = JSONSet(conn, "tobj", ".", obj, false, false)
 	if err != nil {
 		return
 	}
@@ -1561,7 +1560,7 @@ func TestJSONObjKeys(t *testing.T) {
 		LoggedOut bool   `json:"loggedOut"`
 	}
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	_, err = rejson.JSONSet(conn, "tobj", ".", obj, false, false)
+	_, err = JSONSet(conn, "tobj", ".", obj, false, false)
 	if err != nil {
 		return
 	}

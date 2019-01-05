@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/Shivam010/go-rejson"
+	"github.com/nitishm/go-rejson"
 	"github.com/gomodule/redigo/redis"
 	"log"
 )
