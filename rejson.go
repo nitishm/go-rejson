@@ -11,9 +11,10 @@ import (
 const (
 	// PopArrLast gives index of the last element for JSONArrPop
 	PopArrLast = -1
-	// DebugMemorySubcommand & DebugHelpSubcommand provide the corresponding sub commands for JSONDebug
+	// DebugMemorySubcommand provide the corresponding MEMORY sub commands for JSONDebug
 	DebugMemorySubcommand = "MEMORY"
-	DebugHelpSubcommand   = "HELP"
+	// DebugHelpSubcommand provide the corresponding HELP sub commands for JSONDebug
+	DebugHelpSubcommand = "HELP"
 	// DebugHelpOutput is the ouput of command JSON.Debug HELP <obj> [path]
 	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
 )
@@ -57,11 +58,17 @@ func (opt *getOptionNoEscape) optionTypeValue() (string, string) {
 	return "NOESCAPE", ""
 }
 
-// Provides New options for JSON.GET Method
-func NewJSONGetOptionIndent(val string) JSONGetOption  { return &getOptionIndent{val} }
+// NewJSONGetOptionIndent provides new INDENT options for JSON.GET Method
+func NewJSONGetOptionIndent(val string) JSONGetOption { return &getOptionIndent{val} }
+
+// NewJSONGetOptionNewLine provides new NEWLINE options for JSON.GET Method
 func NewJSONGetOptionNewLine(val string) JSONGetOption { return &getOptionNewLine{val} }
-func NewJSONGetOptionSpace(val string) JSONGetOption   { return &getOptionSpace{val} }
-func NewJSONGetOptionNoEscape() JSONGetOption          { return &getOptionNoEscape{} }
+
+// NewJSONGetOptionSpace provides new SPACE options for JSON.GET Method
+func NewJSONGetOptionSpace(val string) JSONGetOption { return &getOptionSpace{val} }
+
+// NewJSONGetOptionNoEscape provides new NOESCAPE options for JSON.GET Method
+func NewJSONGetOptionNoEscape() JSONGetOption { return &getOptionNoEscape{} }
 
 // commandMux maps command name to a command function
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
