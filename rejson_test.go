@@ -184,9 +184,10 @@ func TestJSONGet(t *testing.T) {
 	}
 
 	type args struct {
-		conn redis.Conn
-		key  string
-		path string
+		conn    redis.Conn
+		key     string
+		path    string
+		options []JSONGetOption
 	}
 	tests := []struct {
 		name    string
@@ -197,9 +198,10 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
-				key:  "kstr",
-				path: ".",
+				conn:    conn,
+				key:     "kstr",
+				path:    ".",
+				options: []JSONGetOption{},
 			},
 			wantRes: []byte("\"simplestring\""),
 			wantErr: false,
@@ -207,11 +209,23 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleInt",
 			args: args{
-				conn: conn,
-				key:  "kint",
-				path: ".",
+				conn:    conn,
+				key:     "kint",
+				path:    ".",
+				options: []JSONGetOption{},
 			},
 			wantRes: []byte("123"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStruct",
+			args: args{
+				conn:    conn,
+				key:     "kstruct",
+				path:    ".",
+				options: []JSONGetOption{},
+			},
+			wantRes: []byte("{\"name\":\"Item#1\",\"number\":1}"),
 			wantErr: false,
 		},
 		{
@@ -220,20 +234,26 @@ func TestJSONGet(t *testing.T) {
 				conn: conn,
 				key:  "kstruct",
 				path: ".",
+				options: []JSONGetOption{
+					NewJSONGetOptionIndent("\t"),
+					NewJSONGetOptionNewLine("\n"),
+					NewJSONGetOptionNoEscape(),
+					NewJSONGetOptionSpace(" "),
+				},
 			},
-			wantRes: []byte("{\"name\":\"Item#1\",\"number\":1}"),
+			wantRes: []byte("{\n\t\"name\": \"Item#1\",\n\t\"number\": 1\n}"),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path)
+			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path, tt.args.options...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONGet() = %v, want %v", gotRes, tt.wantRes)
+				t.Errorf("\nJSONGet() = %v,\nwant      = %v", gotRes, tt.wantRes)
 			}
 		})
 	}
@@ -1104,10 +1124,10 @@ func TestJSONArrPop(t *testing.T) {
 	}
 
 	type args struct {
-		conn   redis.Conn
-		key    string
-		path   string
-		index  int
+		conn  redis.Conn
+		key   string
+		path  string
+		index int
 	}
 	tests := []struct {
 		name    string
@@ -1466,6 +1486,352 @@ func TestJSONArrInsert(t *testing.T) {
 				if !reflect.DeepEqual(newArr.([]byte), tt.finalSliceGot) {
 					t.Errorf("JSONArrGet() = %v, want %v", newArr.([]byte), tt.finalSliceGot)
 				}
+			}
+		})
+	}
+}
+
+func TestJSONObjLen(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	type Object struct {
+		Name      string `json:"name"`
+		LastSeen  int64  `json:"lastSeen"`
+		LoggedOut bool   `json:"loggedOut"`
+	}
+	obj := Object{"Leonard Cohen", 1478476800, true}
+	_, err = JSONSet(conn, "tobj", ".", obj, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn redis.Conn
+		key  string
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleObject",
+			args: args{
+				conn: conn,
+				key:  "tobj",
+				path: ".",
+			},
+			wantRes: int64(3),
+			wantErr: false,
+		},
+		{
+			name: "SimpleString",
+			args: args{
+				conn: conn,
+				key:  "tstr",
+				path: ".",
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONObjLen(tt.args.conn, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONObjLen() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONObjLen() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONObjKeys(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	type Object struct {
+		Name      string `json:"name"`
+		LastSeen  int64  `json:"lastSeen"`
+		LoggedOut bool   `json:"loggedOut"`
+	}
+	obj := Object{"Leonard Cohen", 1478476800, true}
+	_, err = JSONSet(conn, "tobj", ".", obj, false, false)
+	if err != nil {
+		return
+	}
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn redis.Conn
+		key  string
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleObject",
+			args: args{
+				conn: conn,
+				key:  "tobj",
+				path: ".",
+			},
+			wantRes: []string{"name", "lastSeen", "loggedOut"},
+			wantErr: false,
+		},
+		{
+			name: "SimpleString",
+			args: args{
+				conn: conn,
+				key:  "tstr",
+				path: ".",
+			},
+			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONObjKeys(tt.args.conn, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONObjKeys() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONObjKeys() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONDebug(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn       redis.Conn
+		subCommand string
+		key        string
+		path       string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "Debug Help",
+			args: args{
+				conn:       conn,
+				subCommand: DebugHelpSubcommand,
+				key:        "tstr",
+				path:       ".",
+			},
+			wantRes: DebugHelpOutput,
+			wantErr: false,
+		},
+		{
+			name: "Debug Memory",
+			args: args{
+				conn:       conn,
+				subCommand: DebugMemorySubcommand,
+				key:        "tstr",
+				path:       ".",
+			},
+			wantRes: int64(36),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONDebug(tt.args.conn, tt.args.subCommand, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONDebug() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONDebug() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONForget(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	if err != nil {
+		return
+	}
+
+	testObj := TestObject{
+		Name:   "Item#1",
+		Number: 1,
+	}
+
+	_, err = JSONSet(conn, "kstruct", ".", testObj, false, false)
+	if err != nil {
+		return
+	}
+
+	type args struct {
+		conn redis.Conn
+		key  string
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "SimpleString",
+			args: args{
+				conn: conn,
+				key:  "kstr",
+				path: ".",
+			},
+			wantRes: int64(1),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStructFieldOK",
+			args: args{
+				conn: conn,
+				key:  "kstruct",
+				path: "name",
+			},
+			wantRes: int64(1),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStructFieldNotOK",
+			args: args{
+				conn: conn,
+				key:  "kstruct",
+				path: "foobar",
+			},
+			wantRes: int64(0),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStruct",
+			args: args{
+				conn: conn,
+				key:  "kstruct",
+				path: ".",
+			},
+			wantRes: int64(1),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRes, err := JSONForget(tt.args.conn, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONForget() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONForget() = %t, want %t", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestJSONResp(t *testing.T) {
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatal("Could not connect to redis.")
+		return
+	}
+	defer func() {
+		conn.Do("FLUSHALL")
+		conn.Close()
+	}()
+
+	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	if err != nil {
+		return
+	}
+	type args struct {
+		conn redis.Conn
+		key  string
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "RESP",
+			args: args{
+				conn: conn,
+				key:  "tstr",
+				path: ".",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := JSONResp(tt.args.conn, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONResp() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

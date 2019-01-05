@@ -3,30 +3,95 @@ package rejson
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gomodule/redigo/redis"
 )
 
-// PopArrLast gives index of the last element for JSONArrPop
-const PopArrLast = -1
+const (
+	// PopArrLast gives index of the last element for JSONArrPop
+	PopArrLast = -1
+	// DebugMemorySubcommand provide the corresponding MEMORY sub commands for JSONDebug
+	DebugMemorySubcommand = "MEMORY"
+	// DebugHelpSubcommand provide the corresponding HELP sub commands for JSONDebug
+	DebugHelpSubcommand = "HELP"
+	// DebugHelpOutput is the ouput of command JSON.Debug HELP <obj> [path]
+	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
+)
+
+// JSONGetOption provides methods various options for the JSON.GET Method
+type JSONGetOption interface {
+	optionTypeValue() (string, string)
+}
+
+// INDENT sets the indentation string for nested levels
+type getOptionIndent struct {
+	indentation string
+}
+
+func (opt *getOptionIndent) optionTypeValue() (string, string) {
+	return "INDENT", opt.indentation
+}
+
+// NEWLINE sets the string that's printed at the end of each line
+type getOptionNewLine struct {
+	lineBreak string
+}
+
+func (opt *getOptionNewLine) optionTypeValue() (string, string) {
+	return "NEWLINE", opt.lineBreak
+}
+
+// SPACE sets the string that's put between a key and a value
+type getOptionSpace struct {
+	space string
+}
+
+func (opt *getOptionSpace) optionTypeValue() (string, string) {
+	return "SPACE", opt.space
+}
+
+// NOESCAPE option will disable the sending of \uXXXX escapes for non-ascii characters
+type getOptionNoEscape struct{}
+
+func (opt *getOptionNoEscape) optionTypeValue() (string, string) {
+	return "NOESCAPE", ""
+}
+
+// NewJSONGetOptionIndent provides new INDENT options for JSON.GET Method
+func NewJSONGetOptionIndent(val string) JSONGetOption { return &getOptionIndent{val} }
+
+// NewJSONGetOptionNewLine provides new NEWLINE options for JSON.GET Method
+func NewJSONGetOptionNewLine(val string) JSONGetOption { return &getOptionNewLine{val} }
+
+// NewJSONGetOptionSpace provides new SPACE options for JSON.GET Method
+func NewJSONGetOptionSpace(val string) JSONGetOption { return &getOptionSpace{val} }
+
+// NewJSONGetOptionNoEscape provides new NOESCAPE options for JSON.GET Method
+func NewJSONGetOptionNoEscape() JSONGetOption { return &getOptionNoEscape{} }
 
 // commandMux maps command name to a command function
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
 	"JSON.SET":       commandJSONSet,
 	"JSON.GET":       commandJSONGet,
-	"JSON.DEL":       commandJSONDel,
+	"JSON.DEL":       commandJSON,
 	"JSON.MGET":      commandJSONMGet,
-	"JSON.TYPE":      commandJSONType,
+	"JSON.TYPE":      commandJSON,
 	"JSON.NUMINCRBY": commandJSONNumIncrBy,
 	"JSON.NUMMULTBY": commandJSONNumMultBy,
 	"JSON.STRAPPEND": commandJSONStrAppend,
-	"JSON.STRLEN":    commandJSONStrLen,
+	"JSON.STRLEN":    commandJSON,
 	"JSON.ARRAPPEND": commandJSONArrAppend,
-	"JSON.ARRLEN":    commandJSONArrLen,
+	"JSON.ARRLEN":    commandJSON,
 	"JSON.ARRPOP":    commandJSONArrPop,
 	"JSON.ARRINDEX":  commandJSONArrIndex,
 	"JSON.ARRTRIM":   commandJSONArrTrim,
 	"JSON.ARRINSERT": commandJSONArrInsert,
+	"JSON.OBJKEYS":   commandJSON,
+	"JSON.OBJLEN":    commandJSON,
+	"JSON.DEBUG":     commandJSONDebug,
+	"JSON.FORGET":    commandJSON,
+	"JSON.RESP":      commandJSON,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -44,7 +109,7 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	argsOut = append(argsOut, b)
 
 	if NX && XX {
-		err = fmt.Errorf("Both NX and XX cannot be true")
+		err = fmt.Errorf("both NX and XX cannot be true")
 		return nil, err
 	}
 
@@ -60,10 +125,11 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
+	argsOut = append(argsOut, argsIn[2:]...)
 	return
 }
 
-func commandJSONDel(argsIn ...interface{}) (argsOut []interface{}, err error) {
+func commandJSON(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
@@ -75,13 +141,6 @@ func commandJSONMGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	path := argsIn[len(argsIn)-1]
 	argsOut = append(argsOut, keys...)
 	argsOut = append(argsOut, path)
-	return
-}
-
-func commandJSONType(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
 	return
 }
 
@@ -109,13 +168,6 @@ func commandJSONStrAppend(argsIn ...interface{}) (argsOut []interface{}, err err
 	return
 }
 
-func commandJSONStrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
-	return
-}
-
 func commandJSONArrAppend(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	keys := argsIn[0]
 	path := argsIn[1]
@@ -128,13 +180,6 @@ func commandJSONArrAppend(argsIn ...interface{}) (argsOut []interface{}, err err
 		}
 		argsOut = append(argsOut, jsonValue)
 	}
-	return
-}
-
-func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
 	return
 }
 
@@ -196,6 +241,14 @@ func commandJSONArrTrim(argsIn ...interface{}) (argsOut []interface{}, err error
 	return
 }
 
+func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	subcommand := argsIn[0]
+	key := argsIn[1]
+	path := argsIn[2]
+	argsOut = append(argsOut, subcommand, key, path)
+	return
+}
+
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
@@ -227,12 +280,25 @@ func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool,
 // JSONGet used to get a json object
 // JSON.GET <key>
 //      [INDENT indentation-string]
-// 	[NEWLINE line-break-string]
+// 		[NEWLINE line-break-string]
 // 		[SPACE space-string]
-// 	[NOESCAPE]
-// 	[path ...]
-func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, _ := CommandBuilder("JSON.GET", key, path)
+// 		[NOESCAPE]
+// 		[path ...]
+func JSONGet(conn redis.Conn, key string, path string, opts ...JSONGetOption) (res interface{}, err error) {
+	args := make([]interface{}, 0)
+	args = append(args, key)
+
+	for _, op := range opts {
+		ty, va := op.optionTypeValue()
+
+		args = append(args, ty)
+		if ty != "NOESCAPE" {
+			args = append(args, va)
+		}
+	}
+	args = append(args, path)
+
+	name, args, _ := CommandBuilder("JSON.GET", args...)
 	return conn.Do(name, args...)
 }
 
@@ -240,7 +306,7 @@ func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err err
 // JSON.MGET <key> [key ...] <path>
 func JSONMGet(conn redis.Conn, path string, keys ...string) (res interface{}, err error) {
 	if len(keys) == 0 {
-		err = fmt.Errorf("Need atlesat one key as an argument")
+		err = fmt.Errorf("need atlesat one key as an argument")
 		return nil, err
 	}
 
@@ -299,7 +365,7 @@ func JSONStrLen(conn redis.Conn, key string, path string) (res interface{}, err 
 // JSON.ARRAPPEND <key> <path> <json> [json ...]
 func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface{}) (res interface{}, err error) {
 	if len(values) == 0 {
-		err = fmt.Errorf("Need atlesat one value string as an argument")
+		err = fmt.Errorf("need atlesat one value string as an argument")
 		return nil, err
 	}
 
@@ -332,7 +398,7 @@ func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, opti
 
 	ln := len(optionalRange)
 	if ln > 2 {
-		return nil, fmt.Errorf("Need atmost two integeral value as an argument representing array range")
+		return nil, fmt.Errorf("need atmost two integeral value as an argument representing array range")
 	} else if ln == 1 { // only inclusive start is present
 		args = append(args, optionalRange[0])
 	} else if ln == 2 { // both inclusive start and exclusive end are present
@@ -353,7 +419,7 @@ func JSONArrTrim(conn redis.Conn, key, path string, start, end int) (res interfa
 // JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...interface{}) (res interface{}, err error) {
 	if len(values) == 0 {
-		err = fmt.Errorf("Need atlesat one value string as an argument")
+		err = fmt.Errorf("need atlesat one value string as an argument")
 		return nil, err
 	}
 
@@ -362,4 +428,80 @@ func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...inter
 	args = append(args, values...)
 	name, args, _ := CommandBuilder("JSON.ARRINSERT", args...)
 	return conn.Do(name, args...)
+}
+
+// JSONObjKeys returns the keys in the object that's referenced by path
+// JSON.OBJKEYS <key> [path]
+func JSONObjKeys(conn redis.Conn, key, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.OBJKEYS", key, path)
+	res, err = conn.Do(name, args...)
+	if err != nil {
+		return
+	}
+	// JSON.OBJKEYS returns slice of string as slice of uint8
+	slc := make([]string, 0, 10)
+	for _, r := range res.([]interface{}) {
+		slc = append(slc, tostring(r))
+	}
+	res = slc
+	return
+}
+
+// JSONObjLen report the number of keys in the JSON Object at path in key
+// JSON.OBJLEN <key> [path]
+func JSONObjLen(conn redis.Conn, key, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.OBJLEN", key, path)
+	return conn.Do(name, args...)
+}
+
+// JSONDebug reports information
+// JSON.DEBUG <subcommand & arguments>
+//		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
+//		JSON.DEBUG HELP					- reply with a helpful message
+func JSONDebug(conn redis.Conn, subcommand, key, path string) (res interface{}, err error) {
+	if subcommand != DebugMemorySubcommand && subcommand != DebugHelpSubcommand {
+		err = fmt.Errorf("unknown subcommand - try `JSON.DEBUG HELP`")
+		return
+	}
+	name, args, _ := CommandBuilder("JSON.DEBUG", subcommand, key, path)
+	res, err = conn.Do(name, args...)
+	if err != nil {
+		return
+	}
+	// JSONDebugMemorySubcommand returns an integer representing memory usage
+	if subcommand == DebugMemorySubcommand {
+		return res.(int64), err
+	}
+	// JSONDebugHelpSubcommand returns slice of string of Help as slice of uint8
+	hlp := make([]string, 0, 10)
+	for _, r := range res.([]interface{}) {
+		hlp = append(hlp, tostring(r))
+	}
+	res = strings.Join(hlp, "\n")
+	return
+}
+
+//JSONForget is an alias for JSONDel
+func JSONForget(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.FORGET", key, path)
+	return conn.Do(name, args...)
+}
+
+//JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
+//JSON.RESP <key> [path]
+func JSONResp(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.RESP", key, path)
+	return conn.Do(name, args...)
+}
+
+// tostring converts each byte in slice into character, else panic out
+func tostring(lst interface{}) (str string) {
+	_lst, ok := lst.([]byte)
+	if !ok {
+		panic("error: something went wrong")
+	}
+	for _, s := range _lst {
+		str += string(s)
+	}
+	return
 }

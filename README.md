@@ -32,11 +32,11 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 - [x] [JSON.ARRPOP](http://rejson.io/commands/#jsonarrpop)
 - [x] [JSON.ARRTRIM](http://rejson.io/commands/#jsonarrtrim)
 - [x] [JSON.ARRINSERT](http://rejson.io/commands/#jsonarrinsert)
-- [ ] [JSON.OBJKEYS](http://rejson.io/commands/#jsonobjkeys)
-- [ ] [JSON.OBJLEN](http://rejson.io/commands/#jsonobjlen)
-- [ ] [JSON.DEBUG](http://rejson.io/commands/#jsondebug)
-- [ ] [JSON.FORGET](http://rejson.io/commands/#jsonforget)
-- [ ] [JSON.RESP](http://rejson.io/commands/#jsonresp)
+- [x] [JSON.OBJKEYS](http://rejson.io/commands/#jsonobjkeys)
+- [x] [JSON.OBJLEN](http://rejson.io/commands/#jsonobjlen)
+- [x] [JSON.DEBUG](http://rejson.io/commands/#jsondebug)
+- [x] [JSON.FORGET](http://rejson.io/commands/#jsonforget)
+- [x] [JSON.RESP](http://rejson.io/commands/#jsonresp)
 
 ## Example usage
 ```golang
