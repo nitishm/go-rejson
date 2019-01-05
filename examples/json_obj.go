@@ -75,5 +75,19 @@ func main() {
 		log.Fatalf("Failed to JSONDebug")
 		return
 	}
-	fmt.Println("\nMemory used by obj:", res)
+	fmt.Println("Memory used by obj:", res)
+
+	res, err = rejson.JSONGet(conn, "obj", ".",
+		&rejson.JSONGetOptionIndent{"\t"}, &rejson.JSONGetOptionNewLine{"\n"},
+		&rejson.JSONGetOptionSpace{" "}, &rejson.JSONGetOptionNoEscape{})
+	if err != nil {
+		log.Fatalf("Failed to JSONGet")
+		return
+	}
+	err = json.Unmarshal(res.([]byte), &objOut)
+	if err != nil {
+		log.Fatalf("Failed to JSON Unmarshal")
+		return
+	}
+	fmt.Println("got obj with options:", objOut)
 }

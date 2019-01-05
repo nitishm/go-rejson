@@ -18,6 +18,51 @@ const (
 	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
 )
 
+// JSONGetOption provides methods various options for the JSON.GET Method
+type JSONGetOption interface {
+	optionTypeValue() (string, string)
+}
+
+// INDENT sets the indentation string for nested levels
+type getOptionIndent struct {
+	indentation string
+}
+
+func (opt *getOptionIndent) optionTypeValue() (string, string) {
+	return "INDENT", opt.indentation
+}
+
+// NEWLINE sets the string that's printed at the end of each line
+type getOptionNewLine struct {
+	lineBreak string
+}
+
+func (opt *getOptionNewLine) optionTypeValue() (string, string) {
+	return "NEWLINE", opt.lineBreak
+}
+
+// SPACE sets the string that's put between a key and a value
+type getOptionSpace struct {
+	space string
+}
+
+func (opt *getOptionSpace) optionTypeValue() (string, string) {
+	return "SPACE", opt.space
+}
+
+// NOESCAPE option will disable the sending of \uXXXX escapes for non-ascii characters
+type getOptionNoEscape struct{}
+
+func (opt *getOptionNoEscape) optionTypeValue() (string, string) {
+	return "NOESCAPE", ""
+}
+
+// Provides New options for JSON.GET Method
+func NewJSONGetOptionIndent(val string) JSONGetOption  { return &getOptionIndent{val} }
+func NewJSONGetOptionNewLine(val string) JSONGetOption { return &getOptionNewLine{val} }
+func NewJSONGetOptionSpace(val string) JSONGetOption   { return &getOptionSpace{val} }
+func NewJSONGetOptionNoEscape() JSONGetOption          { return &getOptionNoEscape{} }
+
 // commandMux maps command name to a command function
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
 	"JSON.SET":       commandJSONSet,
@@ -73,6 +118,7 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
+	argsOut = append(argsOut, argsIn[2:]...)
 	return
 }
 
@@ -227,12 +273,25 @@ func JSONSet(conn redis.Conn, key string, path string, obj interface{}, NX bool,
 // JSONGet used to get a json object
 // JSON.GET <key>
 //      [INDENT indentation-string]
-// 	[NEWLINE line-break-string]
+// 		[NEWLINE line-break-string]
 // 		[SPACE space-string]
-// 	[NOESCAPE]
-// 	[path ...]
-func JSONGet(conn redis.Conn, key string, path string) (res interface{}, err error) {
-	name, args, _ := CommandBuilder("JSON.GET", key, path)
+// 		[NOESCAPE]
+// 		[path ...]
+func JSONGet(conn redis.Conn, key string, path string, opts ...JSONGetOption) (res interface{}, err error) {
+	args := make([]interface{}, 0)
+	args = append(args, key)
+
+	for _, op := range opts {
+		ty, va := op.optionTypeValue()
+
+		args = append(args, ty)
+		if ty != "NOESCAPE" {
+			args = append(args, va)
+		}
+	}
+	args = append(args, path)
+
+	name, args, _ := CommandBuilder("JSON.GET", args...)
 	return conn.Do(name, args...)
 }
 

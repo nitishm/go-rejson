@@ -184,9 +184,10 @@ func TestJSONGet(t *testing.T) {
 	}
 
 	type args struct {
-		conn redis.Conn
-		key  string
-		path string
+		conn    redis.Conn
+		key     string
+		path    string
+		options []JSONGetOption
 	}
 	tests := []struct {
 		name    string
@@ -197,9 +198,10 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
-				key:  "kstr",
-				path: ".",
+				conn:    conn,
+				key:     "kstr",
+				path:    ".",
+				options: []JSONGetOption{},
 			},
 			wantRes: []byte("\"simplestring\""),
 			wantErr: false,
@@ -207,11 +209,23 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleInt",
 			args: args{
-				conn: conn,
-				key:  "kint",
-				path: ".",
+				conn:    conn,
+				key:     "kint",
+				path:    ".",
+				options: []JSONGetOption{},
 			},
 			wantRes: []byte("123"),
+			wantErr: false,
+		},
+		{
+			name: "SimpleStruct",
+			args: args{
+				conn:    conn,
+				key:     "kstruct",
+				path:    ".",
+				options: []JSONGetOption{},
+			},
+			wantRes: []byte("{\"name\":\"Item#1\",\"number\":1}"),
 			wantErr: false,
 		},
 		{
@@ -220,20 +234,26 @@ func TestJSONGet(t *testing.T) {
 				conn: conn,
 				key:  "kstruct",
 				path: ".",
+				options: []JSONGetOption{
+					NewJSONGetOptionIndent("\t"),
+					NewJSONGetOptionNewLine("\n"),
+					NewJSONGetOptionNoEscape(),
+					NewJSONGetOptionSpace(" "),
+				},
 			},
-			wantRes: []byte("{\"name\":\"Item#1\",\"number\":1}"),
+			wantRes: []byte("{\n\t\"name\": \"Item#1\",\n\t\"number\": 1\n}"),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path)
+			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path, tt.args.options...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONGet() = %v, want %v", gotRes, tt.wantRes)
+				t.Errorf("\nJSONGet() = %v,\nwant      = %v", gotRes, tt.wantRes)
 			}
 		})
 	}
