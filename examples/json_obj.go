@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/nitishm/go-rejson"
 	"github.com/gomodule/redigo/redis"
+	"github.com/nitishm/go-rejson"
 	"log"
 )
 
@@ -62,16 +62,15 @@ func main() {
 		log.Fatalf("Failed to JSONObjKeys")
 		return
 	}
-	fmt.Println("keys:",res)
+	fmt.Println("keys:", res)
 
-
-	res, err= rejson.JSONDebug(conn, rejson.DebugHelpSubcommand, "obj", ".")
+	res, err = rejson.JSONDebug(conn, rejson.DebugHelpSubcommand, "obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONDebug")
 		return
 	}
 	fmt.Println(res)
-	res, err= rejson.JSONDebug(conn, rejson.DebugMemorySubcommand, "obj", ".")
+	res, err = rejson.JSONDebug(conn, rejson.DebugMemorySubcommand, "obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONDebug")
 		return

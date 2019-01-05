@@ -22,22 +22,24 @@ const (
 var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
 	"JSON.SET":       commandJSONSet,
 	"JSON.GET":       commandJSONGet,
-	"JSON.DEL":       commandJSONDel,
+	"JSON.DEL":       commandJSON,
 	"JSON.MGET":      commandJSONMGet,
-	"JSON.TYPE":      commandJSONType,
+	"JSON.TYPE":      commandJSON,
 	"JSON.NUMINCRBY": commandJSONNumIncrBy,
 	"JSON.NUMMULTBY": commandJSONNumMultBy,
 	"JSON.STRAPPEND": commandJSONStrAppend,
-	"JSON.STRLEN":    commandJSONStrLen,
+	"JSON.STRLEN":    commandJSON,
 	"JSON.ARRAPPEND": commandJSONArrAppend,
-	"JSON.ARRLEN":    commandJSONArrLen,
+	"JSON.ARRLEN":    commandJSON,
 	"JSON.ARRPOP":    commandJSONArrPop,
 	"JSON.ARRINDEX":  commandJSONArrIndex,
 	"JSON.ARRTRIM":   commandJSONArrTrim,
 	"JSON.ARRINSERT": commandJSONArrInsert,
-	"JSON.OBJKEYS":   commandJSONObj,
-	"JSON.OBJLEN":    commandJSONObj,
+	"JSON.OBJKEYS":   commandJSON,
+	"JSON.OBJLEN":    commandJSON,
 	"JSON.DEBUG":     commandJSONDebug,
+	"JSON.FORGET":    commandJSON,
+	"JSON.RESP":      commandJSON,
 }
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
@@ -74,7 +76,7 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
-func commandJSONDel(argsIn ...interface{}) (argsOut []interface{}, err error) {
+func commandJSON(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
@@ -86,13 +88,6 @@ func commandJSONMGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	path := argsIn[len(argsIn)-1]
 	argsOut = append(argsOut, keys...)
 	argsOut = append(argsOut, path)
-	return
-}
-
-func commandJSONType(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
 	return
 }
 
@@ -120,13 +115,6 @@ func commandJSONStrAppend(argsIn ...interface{}) (argsOut []interface{}, err err
 	return
 }
 
-func commandJSONStrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
-	return
-}
-
 func commandJSONArrAppend(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	keys := argsIn[0]
 	path := argsIn[1]
@@ -139,13 +127,6 @@ func commandJSONArrAppend(argsIn ...interface{}) (argsOut []interface{}, err err
 		}
 		argsOut = append(argsOut, jsonValue)
 	}
-	return
-}
-
-func commandJSONArrLen(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
 	return
 }
 
@@ -204,13 +185,6 @@ func commandJSONArrTrim(argsIn ...interface{}) (argsOut []interface{}, err error
 	start := argsIn[2]
 	end := argsIn[3]
 	argsOut = append(argsOut, key, path, start, end)
-	return
-}
-
-func commandJSONObj(argsIn ...interface{}) (argsOut []interface{}, err error) {
-	key := argsIn[0]
-	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
 	return
 }
 
@@ -439,6 +413,19 @@ func JSONDebug(conn redis.Conn, subcommand, key, path string) (res interface{}, 
 	}
 	res = strings.Join(hlp, "\n")
 	return
+}
+
+//JSONForget is an alias for JSONDel
+func JSONForget(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.FORGET", key, path)
+	return conn.Do(name, args...)
+}
+
+//JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
+//JSON.RESP <key> [path]
+func JSONResp(conn redis.Conn, key string, path string) (res interface{}, err error) {
+	name, args, _ := CommandBuilder("JSON.RESP", key, path)
+	return conn.Do(name, args...)
 }
 
 // tostring converts each byte in slice into character, else panic out
