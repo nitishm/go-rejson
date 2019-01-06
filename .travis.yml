@@ -23,12 +23,15 @@ before_install:
 
 install:
   - dep ensure
+  - go get github.com/alecthomas/gometalinter
+  - gometalinter --install --vendored-linters
 
 script:
   - go test -v .
   - go test -covermode=count -coverprofile=profile.cov .
   - go vet -x .
   - staticcheck .
+  - gometalinter --concurrency=4 --enable-gc --deadline=300s --disable-all --enable=deadcode --enable=errcheck --enable=goconst --enable=gofmt --enable=goimports --enable=golint --exclude=.pb.go --enable=gotype --enable=ineffassign --enable=interfacer --enable=lll --line-length=120 --enable=misspell --enable=structcheck --enable=unconvert --enable=unused --enable=varcheck --enable=vet --enable=maligned --vendor ./...
 
 after_script:
   - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci

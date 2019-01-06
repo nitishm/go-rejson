@@ -15,7 +15,7 @@ const (
 	DebugMemorySubcommand = "MEMORY"
 	// DebugHelpSubcommand provide the corresponding HELP sub commands for JSONDebug
 	DebugHelpSubcommand = "HELP"
-	// DebugHelpOutput is the ouput of command JSON.Debug HELP <obj> [path]
+	// DebugHelpOutput is the output of command JSON.Debug HELP <obj> [path]
 	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
 )
 
@@ -252,7 +252,8 @@ func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) 
 // CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
 // This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
 // MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
-func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) {
+func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut string,
+	argsOut []interface{}, err error) {
 	cmd, ok := commandMux[commandNameIn]
 	if !ok {
 		return commandNameOut, nil, fmt.Errorf("command %s not supported by ReJSON", commandNameIn)
@@ -306,7 +307,7 @@ func JSONGet(conn redis.Conn, key string, path string, opts ...JSONGetOption) (r
 // JSON.MGET <key> [key ...] <path>
 func JSONMGet(conn redis.Conn, path string, keys ...string) (res interface{}, err error) {
 	if len(keys) == 0 {
-		err = fmt.Errorf("need atlesat one key as an argument")
+		err = fmt.Errorf("need atleast one key as an argument")
 		return nil, err
 	}
 
@@ -365,7 +366,7 @@ func JSONStrLen(conn redis.Conn, key string, path string) (res interface{}, err 
 // JSON.ARRAPPEND <key> <path> <json> [json ...]
 func JSONArrAppend(conn redis.Conn, key string, path string, values ...interface{}) (res interface{}, err error) {
 	if len(values) == 0 {
-		err = fmt.Errorf("need atlesat one value string as an argument")
+		err = fmt.Errorf("need atleast one value string as an argument")
 		return nil, err
 	}
 
@@ -393,7 +394,8 @@ func JSONArrPop(conn redis.Conn, key, path string, index int) (res interface{}, 
 
 // JSONArrIndex returns the index of the json element provided and return -1 if element is not present
 // JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
-func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
+func JSONArrIndex(conn redis.Conn, key, path string,
+	jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
 	args := []interface{}{key, path, jsonValue}
 
 	ln := len(optionalRange)
@@ -419,7 +421,7 @@ func JSONArrTrim(conn redis.Conn, key, path string, start, end int) (res interfa
 // JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 func JSONArrInsert(conn redis.Conn, key, path string, index int, values ...interface{}) (res interface{}, err error) {
 	if len(values) == 0 {
-		err = fmt.Errorf("need atlesat one value string as an argument")
+		err = fmt.Errorf("need atleast one value string as an argument")
 		return nil, err
 	}
 

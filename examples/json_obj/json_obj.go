@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
-	"log"
 )
 
 func main() {
@@ -19,8 +20,11 @@ func main() {
 		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			log.Fatalf("Failed to communicate to redis-server @ %v", err)
+		}
 	}()
 
 	type Object struct {
