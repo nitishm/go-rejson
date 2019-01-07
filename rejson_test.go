@@ -20,8 +20,11 @@ func TestJSONSet(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	testObj := TestObject{
@@ -159,8 +162,11 @@ func TestJSONGet(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -266,8 +272,11 @@ func TestJSONDel(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -358,8 +367,11 @@ func TestJSONMGet(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -489,8 +501,11 @@ func TestJSONType(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -581,8 +596,11 @@ func TestJSONNumIncrBy(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kint", ".", 1, false, false)
@@ -683,8 +701,11 @@ func TestJSONNumMultBy(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kint", ".", 2, false, false)
@@ -785,8 +806,11 @@ func TestJSONStrAppend(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -871,8 +895,11 @@ func TestJSONStrLen(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -953,8 +980,11 @@ func TestJSONArrAppend(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	values := make([]interface{}, 0)
@@ -1033,8 +1063,11 @@ func TestJSONArrLen(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	values := make([]interface{}, 0)
@@ -1104,8 +1137,11 @@ func TestJSONArrPop(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	values := make([]interface{}, 0)
@@ -1198,8 +1234,11 @@ func TestJSONArrIndex(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	values := make([]interface{}, 0)
@@ -1312,8 +1351,11 @@ func TestJSONArrTrim(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	values := make([]interface{}, 0)
@@ -1392,8 +1434,11 @@ func TestJSONArrInsert(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	values := make([]interface{}, 0)
@@ -1498,8 +1543,11 @@ func TestJSONObjLen(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	type Object struct {
@@ -1570,8 +1618,11 @@ func TestJSONObjKeys(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	type Object struct {
@@ -1642,8 +1693,11 @@ func TestJSONDebug(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
@@ -1706,8 +1760,11 @@ func TestJSONForget(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
@@ -1798,8 +1855,11 @@ func TestJSONResp(t *testing.T) {
 		return
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			t.Fatal("Failed to communicate to redis-server")
+		}
 	}()
 
 	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
