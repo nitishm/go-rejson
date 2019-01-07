@@ -24,8 +24,6 @@ before_install:
 
 install:
   - dep ensure
-  - go get github.com/alecthomas/gometalinter
-  - gometalinter --install --vendored-linters
 
 script:
   - go test -v .
