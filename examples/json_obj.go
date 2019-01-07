@@ -78,8 +78,8 @@ func main() {
 	fmt.Println("Memory used by obj:", res)
 
 	res, err = rejson.JSONGet(conn, "obj", ".",
-		&rejson.JSONGetOptionIndent{"\t"}, &rejson.JSONGetOptionNewLine{"\n"},
-		&rejson.JSONGetOptionSpace{" "}, &rejson.JSONGetOptionNoEscape{})
+		rejson.NewJSONGetOptionIndent("\t"), rejson.NewJSONGetOptionNewLine("\n"),
+		rejson.NewJSONGetOptionSpace(" "), rejson.NewJSONGetOptionNoEscape())
 	if err != nil {
 		log.Fatalf("Failed to JSONGet")
 		return
