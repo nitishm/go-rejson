@@ -3,6 +3,7 @@ Go-ReJSON is a [Go](https://golang.org/) client for [rejson](https://github.com/
 
 [![Build Status](https://travis-ci.org/nitishm/go-rejson.svg?branch=master)](https://travis-ci.org/nitishm/go-rejson)
 [![codecov](https://coveralls.io/repos/github/nitishm/go-rejson/badge.svg?branch=master)](https://coveralls.io/github/nitishm/go-rejson?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nitishm/go-rejson)](https://goreportcard.com/report/github.com/nitishm/go-rejson)
 
 > ReJSON is a Redis module that implements ECMA-404 The JSON Data Interchange Standard as a native data type. It allows storing, updating and fetching JSON values from Redis keys (documents).
 > Primary features:
