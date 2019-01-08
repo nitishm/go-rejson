@@ -142,14 +142,15 @@ func TestJSONSet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONSet(conn, tt.args.key, tt.args.path, tt.args.obj, tt.args.NX, tt.args.XX)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONSet() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONSet(conn, ttt.args.key, ttt.args.path, ttt.args.obj, ttt.args.NX, ttt.args.XX)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONSet() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONSet() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONSet() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -252,14 +253,15 @@ func TestJSONGet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path, tt.args.options...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONGet() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONGet(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.options...)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONGet() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("\nJSONGet() = %v,\nwant      = %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("\nJSONGet() = %v,\nwant      = %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -347,14 +349,15 @@ func TestJSONDel(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONDel(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONDel() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONDel(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONDel() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONDel() = %t, want %t", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONDel() = %t, want %t", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -473,14 +476,15 @@ func TestJSONMGet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONMGet(tt.args.conn, tt.args.path, tt.args.keys...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONMGet() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONMGet(ttt.args.conn, ttt.args.path, ttt.args.keys...)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONMGet() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONMGet() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONMGet() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -576,14 +580,15 @@ func TestJSONType(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONType(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONType() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONType(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONType() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONType() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONType() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -681,14 +686,15 @@ func TestJSONNumIncrBy(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONNumIncrBy(tt.args.conn, tt.args.key, tt.args.path, tt.args.number)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONNumIncrBy() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONNumIncrBy(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.number)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONNumIncrBy() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONNumIncrBy() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONNumIncrBy() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -786,14 +792,15 @@ func TestJSONNumMultBy(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONNumMultBy(tt.args.conn, tt.args.key, tt.args.path, tt.args.number)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONNumMultBy() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONNumMultBy(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.number)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONNumMultBy() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONNumMultBy() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONNumMultBy() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -875,14 +882,15 @@ func TestJSONStrAppend(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONStrAppend(tt.args.conn, tt.args.key, tt.args.path, tt.args.jsonstring)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONStrAppend() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONStrAppend(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.jsonstring)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONStrAppend() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONStrAppend() = %v, want %t", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONStrAppend() = %v, want %t", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -960,14 +968,15 @@ func TestJSONStrLen(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONStrLen(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONStrLen() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONStrLen(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONStrLen() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONStrLen() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONStrLen() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1043,14 +1052,15 @@ func TestJSONArrAppend(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONArrAppend(tt.args.conn, tt.args.key, tt.args.path, tt.args.values...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONArrAppend() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONArrAppend(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.values...)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONArrAppend() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONArrAppend() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONArrAppend() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1117,14 +1127,15 @@ func TestJSONArrLen(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONArrLen(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONArrLen() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONArrLen(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONArrLen() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONArrLen() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONArrLen() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1206,21 +1217,22 @@ func TestJSONArrPop(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := JSONArrPop(tt.args.conn, tt.args.key, tt.args.path, tt.args.index)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONArrPop() error = %v, wantErr %v", err, tt.wantErr)
+			res, err := JSONArrPop(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.index)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONArrPop() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !tt.wantErr {
+			if !ttt.wantErr {
 				var gotRes interface{}
 				err = json.Unmarshal(res.([]byte), &gotRes)
 				if err != nil {
 					t.Errorf("JSONArrPop(): Failed to JSON Unmarshal")
 					return
 				}
-				if !reflect.DeepEqual(gotRes, tt.wantRes) {
-					t.Errorf("JSONArrPop() = %v, want %v", gotRes, tt.wantRes)
+				if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+					t.Errorf("JSONArrPop() = %v, want %v", gotRes, ttt.wantRes)
 				}
 			}
 		})
@@ -1328,16 +1340,17 @@ func TestJSONArrIndex(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
 
-			gotRes, err := JSONArrIndex(tt.args.conn, tt.args.key, tt.args.path, tt.args.value, tt.args.optionalRange...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONArrIndex() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONArrIndex(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.value, ttt.args.optionalRange...)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONArrIndex() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !tt.wantErr {
-				if !reflect.DeepEqual(gotRes.(int64), tt.wantRes.(int64)) {
-					t.Errorf("JSONArrIndex() = %v, want %v", gotRes, tt.wantRes)
+			if !ttt.wantErr {
+				if !reflect.DeepEqual(gotRes.(int64), ttt.wantRes.(int64)) {
+					t.Errorf("JSONArrIndex() = %v, want %v", gotRes, ttt.wantRes)
 				}
 			}
 		})
@@ -1412,15 +1425,16 @@ func TestJSONArrTrim(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
 
-			gotRes, err := JSONArrTrim(tt.args.conn, tt.args.key, tt.args.path, tt.args.start, tt.args.end)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONArrTrim() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONArrTrim(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.start, ttt.args.end)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONArrTrim() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONArrTrim() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONArrTrim() = %v, want %v", gotRes, ttt.wantRes)
 			}
 
 		})
@@ -1511,25 +1525,26 @@ func TestJSONArrInsert(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONArrInsert(tt.args.conn, tt.args.key, tt.args.path, tt.args.index, tt.args.values...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONArrInsert() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONArrInsert(ttt.args.conn, ttt.args.key, ttt.args.path, ttt.args.index, ttt.args.values...)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONArrInsert() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONArrInsert() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONArrInsert() = %v, want %v", gotRes, ttt.wantRes)
 				return
 			}
 
-			if !tt.wantErr {
-				newArr, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path)
+			if !ttt.wantErr {
+				newArr, err := JSONGet(ttt.args.conn, ttt.args.key, ttt.args.path)
 				if err != nil {
 					t.Errorf("JSONArrGet(): Failed to JSONGet")
 					return
 				}
-				if !reflect.DeepEqual(newArr.([]byte), tt.finalSliceGot) {
-					t.Errorf("JSONArrGet() = %v, want %v", newArr.([]byte), tt.finalSliceGot)
+				if !reflect.DeepEqual(newArr.([]byte), ttt.finalSliceGot) {
+					t.Errorf("JSONArrGet() = %v, want %v", newArr.([]byte), ttt.finalSliceGot)
 				}
 			}
 		})
@@ -1598,14 +1613,15 @@ func TestJSONObjLen(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONObjLen(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONObjLen() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONObjLen(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONObjLen() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONObjLen() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONObjLen() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1673,14 +1689,15 @@ func TestJSONObjKeys(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONObjKeys(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONObjKeys() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONObjKeys(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONObjKeys() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONObjKeys() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONObjKeys() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1740,14 +1757,15 @@ func TestJSONDebug(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONDebug(tt.args.conn, tt.args.subCommand, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONDebug() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONDebug(ttt.args.conn, ttt.args.subCommand, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONDebug() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONDebug() = %v, want %v", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONDebug() = %v, want %v", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1835,14 +1853,15 @@ func TestJSONForget(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONForget(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONForget() error = %v, wantErr %v", err, tt.wantErr)
+			gotRes, err := JSONForget(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONForget() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
-				t.Errorf("JSONForget() = %t, want %t", gotRes, tt.wantRes)
+			if !reflect.DeepEqual(gotRes, ttt.wantRes) {
+				t.Errorf("JSONForget() = %t, want %t", gotRes, ttt.wantRes)
 			}
 		})
 	}
@@ -1887,10 +1906,11 @@ func TestJSONResp(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		ttt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := JSONResp(tt.args.conn, tt.args.key, tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("JSONResp() error = %v, wantErr %v", err, tt.wantErr)
+			_, err := JSONResp(ttt.args.conn, ttt.args.key, ttt.args.path)
+			if (err != nil) != ttt.wantErr {
+				t.Errorf("JSONResp() error = %v, wantErr %v", err, ttt.wantErr)
 				return
 			}
 		})

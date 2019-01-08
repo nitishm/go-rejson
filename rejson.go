@@ -399,11 +399,12 @@ func JSONArrIndex(conn redis.Conn, key, path string,
 	args := []interface{}{key, path, jsonValue}
 
 	ln := len(optionalRange)
-	if ln > 2 {
+	switch {
+	case ln > 2:
 		return nil, fmt.Errorf("need atmost two integeral value as an argument representing array range")
-	} else if ln == 1 { // only inclusive start is present
+	case ln == 1: // only inclusive start is present
 		args = append(args, optionalRange[0])
-	} else if ln == 2 { // both inclusive start and exclusive end are present
+	case ln == 2: // both inclusive start and exclusive end are present
 		args = append(args, optionalRange[0], optionalRange[1])
 	}
 	name, args, _ := CommandBuilder("JSON.ARRINDEX", args...)
