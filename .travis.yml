@@ -20,6 +20,7 @@ before_install:
   - go get honnef.co/go/tools/cmd/staticcheck
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.12.5
 
 install:
   - dep ensure
@@ -27,8 +28,7 @@ install:
 script:
   - go test -v .
   - go test -covermode=count -coverprofile=profile.cov .
-  - go vet -x .
-  - staticcheck .
+  - golangci-lint run ./...
 
 after_script:
   - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci

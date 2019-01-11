@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
-	"log"
 )
 
 func main() {
@@ -19,8 +20,11 @@ func main() {
 		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
 	}
 	defer func() {
-		conn.Do("FLUSHALL")
-		conn.Close()
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			log.Fatalf("Failed to communicate to redis-server @ %v", err)
+		}
 	}()
 
 	ArrIn := []string{"one", "two", "three", "four", "five"}
@@ -85,28 +89,28 @@ func main() {
 
 	res, err = rejson.JSONArrIndex(conn, "arr", ".", "one")
 	if err != nil {
-		log.Fatalf("Failed to JSONArrIndex", err)
+		log.Fatalf("Failed to JSONArrIndex %v", err)
 		return
 	}
 	fmt.Println("Index of \"one\":", res)
 
 	res, err = rejson.JSONArrIndex(conn, "arr", ".", "three", 3, 10)
 	if err != nil {
-		log.Fatalf("Failed to JSONArrIndex", err)
+		log.Fatalf("Failed to JSONArrIndex %v", err)
 		return
 	}
 	fmt.Println("Out of range:", res)
 
 	res, err = rejson.JSONArrIndex(conn, "arr", ".", "ten")
 	if err != nil {
-		log.Fatalf("Failed to JSONArrIndex", err)
+		log.Fatalf("Failed to JSONArrIndex %v", err)
 		return
 	}
 	fmt.Println("\"ten\" not found:", res)
 
 	res, err = rejson.JSONArrTrim(conn, "arr", ".", 1, 2)
 	if err != nil {
-		log.Fatalf("Failed to JSONArrTrim", err)
+		log.Fatalf("Failed to JSONArrTrim %v", err)
 		return
 	}
 	fmt.Println("no. of elements left:", res)
@@ -125,7 +129,7 @@ func main() {
 
 	res, err = rejson.JSONArrInsert(conn, "arr", ".", 0, "one")
 	if err != nil {
-		log.Fatalf("Failed to JSONArrInsert", err)
+		log.Fatalf("Failed to JSONArrInsert %v", err)
 		return
 	}
 	fmt.Println("no. of elements:", res)
