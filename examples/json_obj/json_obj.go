@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"encoding/json"
 	"flag"
@@ -95,3 +96,4 @@ func main() {
 	}
 	fmt.Println("got obj with options:", objOut)
 }
+*/

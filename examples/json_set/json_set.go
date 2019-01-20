@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"encoding/json"
 	"flag"
@@ -70,3 +71,4 @@ func main() {
 
 	log.Printf("Student read from redis : %#v\n", readStudent)
 }
+*/

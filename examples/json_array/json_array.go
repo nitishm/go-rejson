@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"encoding/json"
 	"flag"
@@ -146,3 +147,4 @@ func main() {
 	}
 	fmt.Println("arr after inserting \"one\":", ArrOut)
 }
+*/

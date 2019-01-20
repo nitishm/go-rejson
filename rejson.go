@@ -1,21 +1,24 @@
 package rejson
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/Shivam010/go-rejson/rjs"
+)
 
-type ReJSONHandler struct {
+type Handler struct {
 	clientName     string
 	implementation ReJSON
 }
 
-func NewRejsonHandler() *ReJSONHandler {
-	return &ReJSONHandler{clientName: "inactive"}
+func NewReJSONHandler() *Handler {
+	return &Handler{clientName: "inactive"}
 }
 
+// ReJSON provides an interface for various clients to implement ReJSON commands
 type ReJSON interface {
+	JSONSet(key, path string, obj interface{}, opts ...rjs.ReJSONOption) (res interface{}, err error)
 
-	JSONSet(key, path string, obj interface{}, NX bool, XX bool) (res interface{}, err error)
-
-	JSONGet(key, path string, opts ...JSONGetOption) (res interface{}, err error)
+	JSONGet(key, path string, opts ...rjs.ReJSONOption) (res interface{}, err error)
 
 	JSONMGet(path string, keys ...string) (res interface{}, err error)
 
@@ -52,27 +55,32 @@ type ReJSON interface {
 	JSONForget(key, path string) (res interface{}, err error)
 
 	JSONResp(key, path string) (res interface{}, err error)
-
 }
 
 // JSONSet used to set a json object
-// JSON.SET <key> <path> <json>
-// 		 [NX | XX]
-func (r *ReJSONHandler) JSONSet(key string, path string, obj interface{}, NX bool, XX bool) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json>
+// 			 [NX | XX]
+//
+func (r *Handler) JSONSet(key string, path string, obj interface{}, opts ...rjs.ReJSONOption) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
-	return r.implementation.JSONSet(key, path, obj, NX, XX)
+	return r.implementation.JSONSet(key, path, obj, opts...)
 }
 
 // JSONGet used to get a json object
-// JSON.GET <key>
-//      [INDENT indentation-string]
-// 		[NEWLINE line-break-string]
-// 		[SPACE space-string]
-// 		[NOESCAPE]
-// 		[path ...]
-func (r *ReJSONHandler) JSONGet(key, path string, opts ...JSONGetOption) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.GET <key>
+//			[INDENT indentation-string]
+//			[NEWLINE line-break-string]
+//			[SPACE space-string]
+//			[NOESCAPE]
+//			[path ...]
+//
+func (r *Handler) JSONGet(key, path string, opts ...rjs.ReJSONOption) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -80,8 +88,11 @@ func (r *ReJSONHandler) JSONGet(key, path string, opts ...JSONGetOption) (res in
 }
 
 // JSONMGet used to get path values from multiple keys
-// JSON.MGET <key> [key ...] <path>
-func (r *ReJSONHandler) JSONMGet(path string, keys ...string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.MGET <key> [key ...] <path>
+//
+func (r *Handler) JSONMGet(path string, keys ...string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -89,8 +100,11 @@ func (r *ReJSONHandler) JSONMGet(path string, keys ...string) (res interface{}, 
 }
 
 // JSONDel to delete a json object
-// JSON.DEL <key> <path>
-func (r *ReJSONHandler) JSONDel(key string, path string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.DEL <key> <path>
+//
+func (r *Handler) JSONDel(key string, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -98,8 +112,11 @@ func (r *ReJSONHandler) JSONDel(key string, path string) (res interface{}, err e
 }
 
 // JSONType to get the type of key or member at path.
-// JSON.TYPE <key> [path]
-func (r *ReJSONHandler) JSONType(key, path string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.TYPE <key> [path]
+//
+func (r *Handler) JSONType(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -107,8 +124,11 @@ func (r *ReJSONHandler) JSONType(key, path string) (res interface{}, err error) 
 }
 
 // JSONNumIncrBy to increment a number by provided amount
-// JSON.NUMINCRBY <key> <path> <number>
-func (r *ReJSONHandler) JSONNumIncrBy(key, path string, number int) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.NUMINCRBY <key> <path> <number>
+//
+func (r *Handler) JSONNumIncrBy(key, path string, number int) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -116,8 +136,11 @@ func (r *ReJSONHandler) JSONNumIncrBy(key, path string, number int) (res interfa
 }
 
 // JSONNumMultBy to increment a number by provided amount
-// JSON.NUMMULTBY <key> <path> <number>
-func (r *ReJSONHandler) JSONNumMultBy(key, path string, number int) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.NUMMULTBY <key> <path> <number>
+//
+func (r *Handler) JSONNumMultBy(key, path string, number int) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -125,8 +148,11 @@ func (r *ReJSONHandler) JSONNumMultBy(key, path string, number int) (res interfa
 }
 
 // JSONStrAppend to append a jsonstring to an existing member
-// JSON.STRAPPEND <key> [path] <json-string>
-func (r *ReJSONHandler) JSONStrAppend(key, path, jsonstring string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.STRAPPEND <key> [path] <json-string>
+//
+func (r *Handler) JSONStrAppend(key, path, jsonstring string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -134,8 +160,11 @@ func (r *ReJSONHandler) JSONStrAppend(key, path, jsonstring string) (res interfa
 }
 
 // JSONStrLen to return the length of a string member
-// JSON.STRLEN <key> [path]
-func (r *ReJSONHandler) JSONStrLen(key, path string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.STRLEN <key> [path]
+//
+func (r *Handler) JSONStrLen(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -143,8 +172,11 @@ func (r *ReJSONHandler) JSONStrLen(key, path string) (res interface{}, err error
 }
 
 // JSONArrAppend to append json value into array at path
-// JSON.ARRAPPEND <key> <path> <json> [json ...]
-func (r *ReJSONHandler) JSONArrAppend(key, path string, values ...interface{}) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.ARRAPPEND <key> <path> <json> [json ...]
+//
+func (r *Handler) JSONArrAppend(key, path string, values ...interface{}) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -152,8 +184,11 @@ func (r *ReJSONHandler) JSONArrAppend(key, path string, values ...interface{}) (
 }
 
 // JSONArrLen returns the length of the json array at path
-// JSON.ARRLEN <key> [path]
-func (r *ReJSONHandler) JSONArrLen(key, path string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.ARRLEN <key> [path]
+//
+func (r *Handler) JSONArrLen(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -162,8 +197,11 @@ func (r *ReJSONHandler) JSONArrLen(key, path string) (res interface{}, err error
 
 // JSONArrPop removes and returns element from the index in the array
 // to pop last element use rejson.PopArrLast
-// JSON.ARRPOP <key> [path [index]]
-func (r *ReJSONHandler) JSONArrPop(key, path string, index int) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.ARRPOP <key> [path [index]]
+//
+func (r *Handler) JSONArrPop(key, path string, index int) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -171,8 +209,11 @@ func (r *ReJSONHandler) JSONArrPop(key, path string, index int) (res interface{}
 }
 
 // JSONArrIndex returns the index of the json element provided and return -1 if element is not present
-// JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
-func (r *ReJSONHandler) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
+//
+func (r *Handler) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -180,8 +221,11 @@ func (r *ReJSONHandler) JSONArrIndex(key, path string, jsonValue interface{}, op
 }
 
 // JSONArrTrim trims an array so that it contains only the specified inclusive range of elements
-// JSON.ARRTRIM <key> <path> <start> <stop>
-func (r *ReJSONHandler) JSONArrTrim(key, path string, start, end int) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.ARRTRIM <key> <path> <start> <stop>
+//
+func (r *Handler) JSONArrTrim(key, path string, start, end int) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -189,8 +233,11 @@ func (r *ReJSONHandler) JSONArrTrim(key, path string, start, end int) (res inter
 }
 
 // JSONArrInsert inserts the json value(s) into the array at path before the index (shifts to the right).
-// JSON.ARRINSERT <key> <path> <index> <json> [json ...]
-func (r *ReJSONHandler) JSONArrInsert(key, path string, index int, values ...interface{}) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.ARRINSERT <key> <path> <index> <json> [json ...]
+//
+func (r *Handler) JSONArrInsert(key, path string, index int, values ...interface{}) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -198,8 +245,11 @@ func (r *ReJSONHandler) JSONArrInsert(key, path string, index int, values ...int
 }
 
 // JSONObjKeys returns the keys in the object that's referenced by path
-// JSON.OBJKEYS <key> [path]
-func (r *ReJSONHandler) JSONObjKeys(key, path string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.OBJKEYS <key> [path]
+//
+func (r *Handler) JSONObjKeys(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -207,8 +257,11 @@ func (r *ReJSONHandler) JSONObjKeys(key, path string) (res interface{}, err erro
 }
 
 // JSONObjLen report the number of keys in the JSON Object at path in key
-// JSON.OBJLEN <key> [path]
-func (r *ReJSONHandler) JSONObjLen(key, path string) (res interface{}, err error) {
+//
+// ReJSON syntax:
+// 	JSON.OBJLEN <key> [path]
+//
+func (r *Handler) JSONObjLen(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
@@ -216,28 +269,37 @@ func (r *ReJSONHandler) JSONObjLen(key, path string) (res interface{}, err error
 }
 
 // JSONDebug reports information
-// JSON.DEBUG <subcommand & arguments>
+//
+// ReJSON syntax:
+// 	JSON.DEBUG <subcommand & arguments>
 //		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
 //		JSON.DEBUG HELP					- reply with a helpful message
-func (r *ReJSONHandler) JSONDebug(subCmd, key, path string) (res interface{}, err error) {
+//
+func (r *Handler) JSONDebug(subCmd, key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONDebug(subCmd, key, path)
 }
 
-//JSONForget is an alias for JSONDel
+// JSONForget is an alias for JSONDel
 //
-func (r *ReJSONHandler) JSONForget(key, path string) (res interface{}, err error) {
+// ReJSON syntax:
+// 	JSON.FORGET <key> [path]
+//
+func (r *Handler) JSONForget(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONForget(key, path)
 }
 
-//JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
-//JSON.RESP <key> [path]
-func (r *ReJSONHandler) JSONResp(key, path string) (res interface{}, err error) {
+// JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
+//
+// ReJSON syntax:
+// 	JSON.RESP <key> [path]
+//
+func (r *Handler) JSONResp(key, path string) (res interface{}, err error) {
 	if r.clientName == "inactive" {
 		return nil, fmt.Errorf("no redis client is set")
 	}

@@ -5,36 +5,18 @@ import (
 	"fmt"
 )
 
-// commandMux maps command name to a command function
-var commandMux = map[string]func(argsIn ...interface{}) (argsOut []interface{}, err error){
-	"JSON.SET":       commandJSONSet,
-	"JSON.GET":       commandJSONGet,
-	"JSON.DEL":       commandJSON,
-	"JSON.MGET":      commandJSONMGet,
-	"JSON.TYPE":      commandJSON,
-	"JSON.NUMINCRBY": commandJSONNumIncrBy,
-	"JSON.NUMMULTBY": commandJSONNumMultBy,
-	"JSON.STRAPPEND": commandJSONStrAppend,
-	"JSON.STRLEN":    commandJSON,
-	"JSON.ARRAPPEND": commandJSONArrAppend,
-	"JSON.ARRLEN":    commandJSON,
-	"JSON.ARRPOP":    commandJSONArrPop,
-	"JSON.ARRINDEX":  commandJSONArrIndex,
-	"JSON.ARRTRIM":   commandJSONArrTrim,
-	"JSON.ARRINSERT": commandJSONArrInsert,
-	"JSON.OBJKEYS":   commandJSON,
-	"JSON.OBJLEN":    commandJSON,
-	"JSON.DEBUG":     commandJSONDebug,
-	"JSON.FORGET":    commandJSON,
-	"JSON.RESP":      commandJSON,
-}
+// ReJSONCommandId marks a particular unique id to all the ReJSON commands
+// to ensure proper type safety and help reducing typos in using them.
+type ReJSONCommandId int32
+
+// CommandBuilderFunc uses for the simplicity of the corresponding ReJSON module command builders
+type CommandBuilderFunc func(argsIn ...interface{}) (argsOut []interface{}, err error)
 
 func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	obj := argsIn[2]
-	NX := argsIn[3].(bool)
-	XX := argsIn[4].(bool)
+
 	argsOut = append(argsOut, key, path)
 
 	b, err := json.Marshal(obj)
@@ -43,15 +25,8 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	}
 	argsOut = append(argsOut, b)
 
-	if NX && XX {
-		err = fmt.Errorf("both NX and XX cannot be true")
-		return nil, err
-	}
-
-	if NX {
-		argsOut = append(argsOut, "NX")
-	} else if XX {
-		argsOut = append(argsOut, "XX")
+	if len(argsIn) == 4 {
+		argsOut = append(argsOut, argsIn[3])
 	}
 	return
 }
@@ -64,7 +39,7 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
-func commandJSON(argsIn ...interface{}) (argsOut []interface{}, err error) {
+func commandJSONgeneric(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
@@ -185,13 +160,20 @@ func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) 
 	return
 }
 
-// CommandBuilder is used to build a command that can be used directly with redigo's conn.Do()
-// This is especially useful if you do not need to conn.Do() and instead need to use the JSON.* commands in a
-// MUTLI/EXEC scenario along with some other operations like GET/SET/HGET/HSET/...
-func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) {
-	cmd, ok := commandMux[commandNameIn]
-	if !ok {
-		return commandNameOut, nil, fmt.Errorf("command %s not supported by ReJSON", commandNameIn)
+// CommandBuilder is used to build a command that can be used directly to
+// build REJSON commands
+//
+// This is especially useful if you do not need to client's `Do()` method
+// and instead need to use the JSON.* commands in the MUTLI/EXEC scenario
+// along with some other operations like
+// 	GET/SET/HGET/HSET/...
+//
+func CommandBuilder(commandNameIn ReJSONCommandId, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) {
+
+	cmd, commandNameOut, err := commandNameIn.Details()
+
+	if err != nil {
+		return
 	}
 
 	argsOut, err = cmd(argsIn...)
@@ -199,5 +181,5 @@ func CommandBuilder(commandNameIn string, argsIn ...interface{}) (commandNameOut
 		return commandNameOut, nil, fmt.Errorf("failed to execute command %s: %v", commandNameIn, err)
 	}
 
-	return commandNameIn, argsOut, nil
+	return
 }
