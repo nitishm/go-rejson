@@ -1,6 +1,9 @@
 package rjs
 
 const (
+	// ClientInactive signifies that the client is inactive in Handler
+	ClientInactive = "inactive"
+
 	// PopArrLast gives index of the last element for JSONArrPop
 	PopArrLast = -1
 
@@ -14,26 +17,26 @@ const (
 	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
 
 	// ReJSON Commands
-	ReJSONCommand_SET       ReJSONCommandId = 0
-	ReJSONCommand_GET       ReJSONCommandId = 1
-	ReJSONCommand_DEL       ReJSONCommandId = 2
-	ReJSONCommand_MGET      ReJSONCommandId = 3
-	ReJSONCommand_TYPE      ReJSONCommandId = 4
-	ReJSONCommand_NUMINCRBY ReJSONCommandId = 5
-	ReJSONCommand_NUMMULTBY ReJSONCommandId = 6
-	ReJSONCommand_STRAPPEND ReJSONCommandId = 7
-	ReJSONCommand_STRLEN    ReJSONCommandId = 8
-	ReJSONCommand_ARRAPPEND ReJSONCommandId = 9
-	ReJSONCommand_ARRLEN    ReJSONCommandId = 10
-	ReJSONCommand_ARRPOP    ReJSONCommandId = 11
-	ReJSONCommand_ARRINDEX  ReJSONCommandId = 12
-	ReJSONCommand_ARRTRIM   ReJSONCommandId = 13
-	ReJSONCommand_ARRINSERT ReJSONCommandId = 14
-	ReJSONCommand_OBJKEYS   ReJSONCommandId = 15
-	ReJSONCommand_OBJLEN    ReJSONCommandId = 16
-	ReJSONCommand_DEBUG     ReJSONCommandId = 17
-	ReJSONCommand_FORGET    ReJSONCommandId = 18
-	ReJSONCommand_RESP      ReJSONCommandId = 19
+	ReJSONCommand_SET       ReJSONCommandID = 0
+	ReJSONCommand_GET       ReJSONCommandID = 1
+	ReJSONCommand_DEL       ReJSONCommandID = 2
+	ReJSONCommand_MGET      ReJSONCommandID = 3
+	ReJSONCommand_TYPE      ReJSONCommandID = 4
+	ReJSONCommand_NUMINCRBY ReJSONCommandID = 5
+	ReJSONCommand_NUMMULTBY ReJSONCommandID = 6
+	ReJSONCommand_STRAPPEND ReJSONCommandID = 7
+	ReJSONCommand_STRLEN    ReJSONCommandID = 8
+	ReJSONCommand_ARRAPPEND ReJSONCommandID = 9
+	ReJSONCommand_ARRLEN    ReJSONCommandID = 10
+	ReJSONCommand_ARRPOP    ReJSONCommandID = 11
+	ReJSONCommand_ARRINDEX  ReJSONCommandID = 12
+	ReJSONCommand_ARRTRIM   ReJSONCommandID = 13
+	ReJSONCommand_ARRINSERT ReJSONCommandID = 14
+	ReJSONCommand_OBJKEYS   ReJSONCommandID = 15
+	ReJSONCommand_OBJLEN    ReJSONCommandID = 16
+	ReJSONCommand_DEBUG     ReJSONCommandID = 17
+	ReJSONCommand_FORGET    ReJSONCommandID = 18
+	ReJSONCommand_RESP      ReJSONCommandID = 19
 
 	// JSONGet Command Options
 	GETOption_INDENT   GetOption = "INDENT"
@@ -47,7 +50,7 @@ const (
 )
 
 // commandName maps command id to the command name
-var commandName = map[ReJSONCommandId]string{
+var commandName = map[ReJSONCommandID]string{
 	ReJSONCommand_SET:       "JSON.SET",
 	ReJSONCommand_GET:       "JSON.GET",
 	ReJSONCommand_DEL:       "JSON.DEL",
@@ -71,7 +74,7 @@ var commandName = map[ReJSONCommandId]string{
 }
 
 // commandMux maps command id to their Command Builder functions
-var commandMux = map[ReJSONCommandId]CommandBuilderFunc{
+var commandMux = map[ReJSONCommandID]CommandBuilderFunc{
 	ReJSONCommand_SET:       commandJSONSet,
 	ReJSONCommand_GET:       commandJSONGet,
 	ReJSONCommand_DEL:       commandJSONgeneric,

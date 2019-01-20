@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-// ReJSONCommandId marks a particular unique id to all the ReJSON commands
+// ReJSONCommandID marks a particular unique id to all the ReJSON commands
 // to ensure proper type safety and help reducing typos in using them.
-type ReJSONCommandId int32
+type ReJSONCommandID int32
 
 // CommandBuilderFunc uses for the simplicity of the corresponding ReJSON module command builders
 type CommandBuilderFunc func(argsIn ...interface{}) (argsOut []interface{}, err error)
@@ -168,7 +168,8 @@ func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) 
 // along with some other operations like
 // 	GET/SET/HGET/HSET/...
 //
-func CommandBuilder(commandNameIn ReJSONCommandId, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) {
+func CommandBuilder(commandNameIn ReJSONCommandID, argsIn ...interface{}) (
+	commandNameOut string, argsOut []interface{}, err error) {
 
 	cmd, commandNameOut, err := commandNameIn.Details()
 
@@ -178,7 +179,7 @@ func CommandBuilder(commandNameIn ReJSONCommandId, argsIn ...interface{}) (comma
 
 	argsOut, err = cmd(argsIn...)
 	if err != nil {
-		return commandNameOut, nil, fmt.Errorf("failed to execute command %s: %v", commandNameIn, err)
+		return commandNameOut, nil, fmt.Errorf("failed to execute command %v: %v", commandNameIn, err)
 	}
 
 	return

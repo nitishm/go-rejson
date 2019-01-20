@@ -199,7 +199,9 @@ func JSONArrPop(conn redis.Conn, key, path string, index int) (res interface{}, 
 
 // JSONArrIndex returns the index of the json element provided and return -1 if element is not present
 // JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
-func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
+func JSONArrIndex(conn redis.Conn, key, path string, jsonValue interface{}, optionalRange ...int) (
+	res interface{}, err error) {
+
 	args := []interface{}{key, path, jsonValue}
 
 	ln := len(optionalRange)

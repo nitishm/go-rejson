@@ -23,7 +23,6 @@ type ReJSONOption interface {
 	//
 	//
 	UseOption(...interface{}) ([]interface{}, error)
-
 }
 
 // GetOption implements ReJSONOption for JSON.GET Method

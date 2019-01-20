@@ -2,6 +2,7 @@ package rejson
 
 import (
 	"fmt"
+
 	"github.com/Shivam010/go-rejson/rjs"
 )
 
@@ -11,7 +12,7 @@ type Handler struct {
 }
 
 func NewReJSONHandler() *Handler {
-	return &Handler{clientName: "inactive"}
+	return &Handler{clientName: rjs.ClientInactive}
 }
 
 // ReJSON provides an interface for various Go Redis Clients to implement ReJSON commands
@@ -63,8 +64,10 @@ type ReJSON interface {
 // 	JSON.SET <key> <path> <json>
 // 			 [NX | XX]
 //
-func (r *Handler) JSONSet(key string, path string, obj interface{}, opts ...rjs.ReJSONOption) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+func (r *Handler) JSONSet(key string, path string, obj interface{}, opts ...rjs.ReJSONOption) (
+	res interface{}, err error) {
+
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONSet(key, path, obj, opts...)
@@ -81,7 +84,7 @@ func (r *Handler) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 //			[path ...]
 //
 func (r *Handler) JSONGet(key, path string, opts ...rjs.ReJSONOption) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONGet(key, path, opts...)
@@ -93,7 +96,7 @@ func (r *Handler) JSONGet(key, path string, opts ...rjs.ReJSONOption) (res inter
 // 	JSON.MGET <key> [key ...] <path>
 //
 func (r *Handler) JSONMGet(path string, keys ...string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONMGet(path, keys...)
@@ -105,7 +108,7 @@ func (r *Handler) JSONMGet(path string, keys ...string) (res interface{}, err er
 // 	JSON.DEL <key> <path>
 //
 func (r *Handler) JSONDel(key string, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONDel(key, path)
@@ -117,7 +120,7 @@ func (r *Handler) JSONDel(key string, path string) (res interface{}, err error) 
 // 	JSON.TYPE <key> [path]
 //
 func (r *Handler) JSONType(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONType(key, path)
@@ -129,7 +132,7 @@ func (r *Handler) JSONType(key, path string) (res interface{}, err error) {
 // 	JSON.NUMINCRBY <key> <path> <number>
 //
 func (r *Handler) JSONNumIncrBy(key, path string, number int) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONNumIncrBy(key, path, number)
@@ -141,7 +144,7 @@ func (r *Handler) JSONNumIncrBy(key, path string, number int) (res interface{}, 
 // 	JSON.NUMMULTBY <key> <path> <number>
 //
 func (r *Handler) JSONNumMultBy(key, path string, number int) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONNumMultBy(key, path, number)
@@ -153,7 +156,7 @@ func (r *Handler) JSONNumMultBy(key, path string, number int) (res interface{}, 
 // 	JSON.STRAPPEND <key> [path] <json-string>
 //
 func (r *Handler) JSONStrAppend(key, path, jsonstring string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONStrAppend(key, path, jsonstring)
@@ -165,7 +168,7 @@ func (r *Handler) JSONStrAppend(key, path, jsonstring string) (res interface{}, 
 // 	JSON.STRLEN <key> [path]
 //
 func (r *Handler) JSONStrLen(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONStrLen(key, path)
@@ -177,7 +180,7 @@ func (r *Handler) JSONStrLen(key, path string) (res interface{}, err error) {
 // 	JSON.ARRAPPEND <key> <path> <json> [json ...]
 //
 func (r *Handler) JSONArrAppend(key, path string, values ...interface{}) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONArrAppend(key, path, values...)
@@ -189,7 +192,7 @@ func (r *Handler) JSONArrAppend(key, path string, values ...interface{}) (res in
 // 	JSON.ARRLEN <key> [path]
 //
 func (r *Handler) JSONArrLen(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONArrLen(key, path)
@@ -202,7 +205,7 @@ func (r *Handler) JSONArrLen(key, path string) (res interface{}, err error) {
 // 	JSON.ARRPOP <key> [path [index]]
 //
 func (r *Handler) JSONArrPop(key, path string, index int) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONArrPop(key, path, index)
@@ -213,8 +216,10 @@ func (r *Handler) JSONArrPop(key, path string, index int) (res interface{}, err 
 // ReJSON syntax:
 // 	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 //
-func (r *Handler) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+func (r *Handler) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (
+	res interface{}, err error) {
+
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONArrIndex(key, path, jsonValue, optionalRange...)
@@ -226,7 +231,7 @@ func (r *Handler) JSONArrIndex(key, path string, jsonValue interface{}, optional
 // 	JSON.ARRTRIM <key> <path> <start> <stop>
 //
 func (r *Handler) JSONArrTrim(key, path string, start, end int) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONArrTrim(key, path, start, end)
@@ -238,7 +243,7 @@ func (r *Handler) JSONArrTrim(key, path string, start, end int) (res interface{}
 // 	JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 //
 func (r *Handler) JSONArrInsert(key, path string, index int, values ...interface{}) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONArrInsert(key, path, index, values...)
@@ -250,7 +255,7 @@ func (r *Handler) JSONArrInsert(key, path string, index int, values ...interface
 // 	JSON.OBJKEYS <key> [path]
 //
 func (r *Handler) JSONObjKeys(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONObjKeys(key, path)
@@ -262,7 +267,7 @@ func (r *Handler) JSONObjKeys(key, path string) (res interface{}, err error) {
 // 	JSON.OBJLEN <key> [path]
 //
 func (r *Handler) JSONObjLen(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONObjLen(key, path)
@@ -276,7 +281,7 @@ func (r *Handler) JSONObjLen(key, path string) (res interface{}, err error) {
 //		JSON.DEBUG HELP					- reply with a helpful message
 //
 func (r *Handler) JSONDebug(subCmd, key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONDebug(subCmd, key, path)
@@ -288,7 +293,7 @@ func (r *Handler) JSONDebug(subCmd, key, path string) (res interface{}, err erro
 // 	JSON.FORGET <key> [path]
 //
 func (r *Handler) JSONForget(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONForget(key, path)
@@ -300,7 +305,7 @@ func (r *Handler) JSONForget(key, path string) (res interface{}, err error) {
 // 	JSON.RESP <key> [path]
 //
 func (r *Handler) JSONResp(key, path string) (res interface{}, err error) {
-	if r.clientName == "inactive" {
+	if r.clientName == rjs.ClientInactive {
 		return nil, fmt.Errorf("no redis client is set")
 	}
 	return r.implementation.JSONResp(key, path)
