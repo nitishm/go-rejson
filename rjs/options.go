@@ -3,9 +3,10 @@ package rjs
 import "fmt"
 
 // ReJSONOption provides methods for the options used by various ReJSON commands
+// It also abstracts options from the required parameters of the commands
 //
 // Like:
-// JSON.Get, JSON.Set, etc
+// 	JSON.GET, JSON.SET, JSON.ARRINDEX, JSON.ARRPOP
 type ReJSONOption interface {
 	// Value returns the value of the option being used
 	Value() string
@@ -56,6 +57,9 @@ func (g GetOption) UseOption(args ...interface{}) ([]interface{}, error) {
 	}, nil
 }
 
+// SetOption implements ReJSONOption for JSON.SET Method
+// Set Options:
+//	* NX or XX
 type SetOption string
 
 // MethodName returns the name of the method i.e. JSON.SET

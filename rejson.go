@@ -14,7 +14,7 @@ func NewReJSONHandler() *Handler {
 	return &Handler{clientName: "inactive"}
 }
 
-// ReJSON provides an interface for various clients to implement ReJSON commands
+// ReJSON provides an interface for various Go Redis Clients to implement ReJSON commands
 type ReJSON interface {
 	JSONSet(key, path string, obj interface{}, opts ...rjs.ReJSONOption) (res interface{}, err error)
 
