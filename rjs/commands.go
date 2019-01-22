@@ -34,8 +34,9 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
-	argsOut = append(argsOut, key, path)
+	argsOut = append(argsOut, key)
 	argsOut = append(argsOut, argsIn[2:]...)
+	argsOut = append(argsOut, path)
 	return
 }
 
@@ -100,7 +101,7 @@ func commandJSONArrPop(argsIn ...interface{}) (argsOut []interface{}, err error)
 
 	argsOut = append(argsOut, key, path)
 	// if index is not used as option for PopArrLast ( == -1 ), append index
-	if index.(int) != -1 {
+	if index.(int) != PopArrLast {
 		argsOut = append(argsOut, index)
 	}
 	return

@@ -1,7 +1,5 @@
 package rjs
 
-import "fmt"
-
 // ReJSONOption provides methods for the options used by various ReJSON commands
 // It also abstracts options from the required parameters of the commands
 //
@@ -9,51 +7,39 @@ import "fmt"
 // 	JSON.GET, JSON.SET, JSON.ARRINDEX, JSON.ARRPOP
 type ReJSONOption interface {
 	// Value returns the value of the option being used
-	Value() string
+	Value() []interface{}
 
-	// MethodName returns the name of the method whose options are begins implemented
-	MethodName() string
-
-	// UseOption is used to apply the option in the command
-	//
-	//
-	// Examples:
-	//
-	//
-	//
-	//
-	UseOption(...interface{}) ([]interface{}, error)
+	// MethodID returns the ID of the ReJSON Function defined in ReJSONCommands
+	// whose options are begins implemented
+	MethodID() ReJSONCommandID
 }
 
 // GetOption implements ReJSONOption for JSON.GET Method
 // Get Options:
-// 	* INDENT
-// 	* NEWLINE
-//  * SPACE
-//  * NOESCAPE
-type GetOption string
+// 	* INDENT 	(with default set to a tab, '\t')
+// 	* NEWLINE	(with default set to a new line, '\n')
+//  * SPACE		(with default set to a space, ' ')
+//  * NOESCAPE  (a boolean type option)
+type GetOption struct {
+	name string
+	Arg  string
+}
 
-// MethodName returns the name of the method i.e. JSON.GET
-func (g GetOption) MethodName() string {
-	return "JSON.GET"
+// MethodID returns the name of the method i.e. JSON.GET
+func (g GetOption) MethodID() ReJSONCommandID {
+	return ReJSONCommand_GET
 }
 
 // Value returns the value of the option being used
-func (g GetOption) Value() string {
-	return string(g)
+func (g GetOption) Value() []interface{} {
+	if g.name == GETOption_NOESCAPE.name {
+		return []interface{}{g.name}
+	}
+	return []interface{}{g.name, g.Arg}
 }
 
-// UseOption is used to apply the option in the command
-func (g GetOption) UseOption(args ...interface{}) ([]interface{}, error) {
-
-	if len(args) > 1 || (g == GETOption_NOESCAPE && len(args) != 0) {
-		return nil, fmt.Errorf("error: too many arguments")
-	}
-
-	return []interface{}{
-		g.Value(),
-		args[0],
-	}, nil
+func (g GetOption) SetValue(arg string) {
+	g.Arg = arg
 }
 
 // SetOption implements ReJSONOption for JSON.SET Method
@@ -61,24 +47,12 @@ func (g GetOption) UseOption(args ...interface{}) ([]interface{}, error) {
 //	* NX or XX
 type SetOption string
 
-// MethodName returns the name of the method i.e. JSON.SET
-func (g SetOption) MethodName() string {
-	return "JSON.SET"
+// MethodID returns the name of the method i.e. JSON.SET
+func (g SetOption) MethodID() ReJSONCommandID {
+	return ReJSONCommand_SET
 }
 
 // Value returns the value of the option being used
-func (g SetOption) Value() string {
-	return string(g)
-}
-
-// UseOption is used to apply the option in the command
-func (g SetOption) UseOption(args ...interface{}) ([]interface{}, error) {
-
-	if len(args) > 0 {
-		return nil, fmt.Errorf("error: too many arguments")
-	}
-
-	return []interface{}{
-		g.Value(),
-	}, nil
+func (g SetOption) Value() []interface{} {
+	return []interface{}{string(g)}
 }

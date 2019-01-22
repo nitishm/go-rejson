@@ -1,8 +1,8 @@
 package rejson
 
-/*
 import (
 	"encoding/json"
+	"github.com/Shivam010/go-rejson/rjs"
 	"reflect"
 	"testing"
 
@@ -12,6 +12,14 @@ import (
 type TestObject struct {
 	Name   string `json:"name"`
 	Number int    `json:"number"`
+}
+
+func TestUnsupportedCommand(t *testing.T) {
+	_, _, err := rjs.CommandBuilder(1234, nil)
+	if err == nil {
+		t.Errorf("TestUnsupportedCommand() returned nil error")
+		return
+	}
 }
 
 func TestJSONSet(t *testing.T) {
@@ -27,6 +35,8 @@ func TestJSONSet(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	testObj := TestObject{
 		"item#1",
@@ -36,8 +46,7 @@ func TestJSONSet(t *testing.T) {
 		key  string
 		path string
 		obj  interface{}
-		NX   bool
-		XX   bool
+		opt  []rjs.SetOption
 	}
 	tests := []struct {
 		name    string
@@ -91,7 +100,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrnx",
 				path: ".",
 				obj:  123,
-				NX:   true,
+				opt:  []rjs.SetOption{rjs.SetOption_NX},
 			},
 			wantRes: "OK",
 			wantErr: false,
@@ -102,7 +111,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrnx",
 				path: ".",
 				obj:  "simplestringnx",
-				NX:   true,
+				opt:  []rjs.SetOption{rjs.SetOption_NX},
 			},
 			wantRes: nil,
 			wantErr: false,
@@ -113,7 +122,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrnx",
 				path: ".",
 				obj:  "simplestringfoo",
-				XX:   true,
+				opt:  []rjs.SetOption{rjs.SetOption_XX},
 			},
 			wantRes: "OK",
 			wantErr: false,
@@ -124,19 +133,17 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrxx",
 				path: ".",
 				obj:  "simplestringfoobar",
-				XX:   true,
+				opt:  []rjs.SetOption{rjs.SetOption_XX},
 			},
 			wantRes: nil,
 			wantErr: false,
 		},
 		{
-			name: "SimpleStringWithXXNX",
+			name: rjs.ClientInactive,
 			args: args{
-				key:  "kstrxxnx",
+				key:  "active",
 				path: ".",
-				obj:  "simplestringfoobar",
-				XX:   true,
-				NX:   true,
+				obj:  "client",
 			},
 			wantRes: nil,
 			wantErr: true,
@@ -144,7 +151,10 @@ func TestJSONSet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONSet(conn, tt.args.key, tt.args.path, tt.args.obj, tt.args.NX, tt.args.XX)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONSet(tt.args.key, tt.args.path, tt.args.obj, tt.args.opt...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONSet() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -169,14 +179,18 @@ func TestJSONGet(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kint", ".", 123, false, false)
+	_, err = rh.JSONSet("kint", ".", 123)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -185,16 +199,16 @@ func TestJSONGet(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "kstruct", ".", testObj, false, false)
+	_, err = rh.JSONSet("kstruct", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn    redis.Conn
 		key     string
 		path    string
-		options []JSONGetOption
+		options []rjs.GetOption
 	}
 	tests := []struct {
 		name    string
@@ -205,10 +219,9 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn:    conn,
 				key:     "kstr",
 				path:    ".",
-				options: []JSONGetOption{},
+				options: []rjs.GetOption{},
 			},
 			wantRes: []byte("\"simplestring\""),
 			wantErr: false,
@@ -216,10 +229,9 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleInt",
 			args: args{
-				conn:    conn,
 				key:     "kint",
 				path:    ".",
-				options: []JSONGetOption{},
+				options: []rjs.GetOption{},
 			},
 			wantRes: []byte("123"),
 			wantErr: false,
@@ -227,10 +239,9 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn:    conn,
 				key:     "kstruct",
 				path:    ".",
-				options: []JSONGetOption{},
+				options: []rjs.GetOption{},
 			},
 			wantRes: []byte("{\"name\":\"Item#1\",\"number\":1}"),
 			wantErr: false,
@@ -238,23 +249,34 @@ func TestJSONGet(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: ".",
-				options: []JSONGetOption{
-					NewJSONGetOptionIndent("\t"),
-					NewJSONGetOptionNewLine("\n"),
-					NewJSONGetOptionNoEscape(),
-					NewJSONGetOptionSpace(" "),
+				options: []rjs.GetOption{
+					rjs.GETOption_INDENT,
+					rjs.GETOption_NEWLINE,
+					rjs.GETOption_NOESCAPE,
+					rjs.GETOption_SPACE,
 				},
 			},
 			wantRes: []byte("{\n\t\"name\": \"Item#1\",\n\t\"number\": 1\n}"),
 			wantErr: false,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path, tt.args.options...)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONGet(tt.args.key, tt.args.path, tt.args.options...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -279,9 +301,12 @@ func TestJSONDel(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -290,13 +315,13 @@ func TestJSONDel(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "kstruct", ".", testObj, false, false)
+	_, err = rh.JSONSet("kstruct", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -309,7 +334,6 @@ func TestJSONDel(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
 				key:  "kstr",
 				path: ".",
 			},
@@ -319,7 +343,6 @@ func TestJSONDel(t *testing.T) {
 		{
 			name: "SimpleStructFieldOK",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: "name",
 			},
@@ -329,7 +352,6 @@ func TestJSONDel(t *testing.T) {
 		{
 			name: "SimpleStructFieldNotOK",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: "foobar",
 			},
@@ -339,17 +361,28 @@ func TestJSONDel(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: ".",
 			},
 			wantRes: int64(1),
 			wantErr: false,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONDel(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONDel(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONDel() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -374,9 +407,12 @@ func TestJSONMGet(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -395,24 +431,26 @@ func TestJSONMGet(t *testing.T) {
 		Number: 3,
 	}
 
-	_, err = JSONSet(conn, "testObj1", ".", testObj1, false, false)
+	_, err = rh.JSONSet("testObj1", ".", testObj1)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "testObj2", ".", testObj2, false, false)
+	_, err = rh.JSONSet("testObj2", ".", testObj2)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "testObj3", ".", testObj3, false, false)
+	_, err = rh.JSONSet("testObj3", ".", testObj3)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	resultNameThreeStudents := make([]interface{}, 0)
 	type args struct {
-		conn redis.Conn
 		path string
 		keys []string
 	}
@@ -425,7 +463,6 @@ func TestJSONMGet(t *testing.T) {
 		{
 			name: "NameThreeStudents",
 			args: args{
-				conn: conn,
 				path: "name",
 				keys: []string{"testObj1", "testObj2", "testObj3"},
 			},
@@ -439,7 +476,6 @@ func TestJSONMGet(t *testing.T) {
 		{
 			name: "NonExistingKey",
 			args: args{
-				conn: conn,
 				path: "name",
 				keys: []string{"testObj1", "testObj2", "foobar"},
 			},
@@ -453,7 +489,6 @@ func TestJSONMGet(t *testing.T) {
 		{
 			name: "NonExistingKey",
 			args: args{
-				conn: conn,
 				path: "foobar",
 				keys: []string{"testObj1"},
 			},
@@ -465,9 +500,17 @@ func TestJSONMGet(t *testing.T) {
 		{
 			name: "NoKeys",
 			args: args{
-				conn: conn,
 				path: "name",
 				keys: []string{},
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				keys: []string{"active"},
+				path: ".",
 			},
 			wantRes: nil,
 			wantErr: true,
@@ -475,7 +518,10 @@ func TestJSONMGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONMGet(tt.args.conn, tt.args.path, tt.args.keys...)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONMGet(tt.args.path, tt.args.keys...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONMGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -484,14 +530,6 @@ func TestJSONMGet(t *testing.T) {
 				t.Errorf("JSONMGet() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
-	}
-}
-
-func TestUnsupportedCommand(t *testing.T) {
-	_, _, err := CommandBuilder("FOOBAR", nil)
-	if err == nil {
-		t.Errorf("TestUnsupportedCommand() returned nil error")
-		return
 	}
 }
 
@@ -508,9 +546,12 @@ func TestJSONType(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -519,13 +560,13 @@ func TestJSONType(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	_, err = rh.JSONSet("testObj", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -538,7 +579,6 @@ func TestJSONType(t *testing.T) {
 		{
 			name: "Object",
 			args: args{
-				conn: conn,
 				key:  "testObj",
 				path: ".",
 			},
@@ -548,7 +588,6 @@ func TestJSONType(t *testing.T) {
 		{
 			name: "String",
 			args: args{
-				conn: conn,
 				key:  "testObj",
 				path: "name",
 			},
@@ -558,7 +597,6 @@ func TestJSONType(t *testing.T) {
 		{
 			name: "Integer",
 			args: args{
-				conn: conn,
 				key:  "testObj",
 				path: "number",
 			},
@@ -568,17 +606,28 @@ func TestJSONType(t *testing.T) {
 		{
 			name: "NotExist",
 			args: args{
-				conn: conn,
 				key:  "foobar",
 				path: "number",
 			},
 			wantRes: nil,
 			wantErr: false,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONType(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONType(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONType() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -603,14 +652,18 @@ func TestJSONNumIncrBy(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kint", ".", 1, false, false)
+	_, err = rh.JSONSet("kint", ".", 1)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -619,13 +672,13 @@ func TestJSONNumIncrBy(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	_, err = rh.JSONSet("testObj", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn   redis.Conn
 		key    string
 		path   string
 		number int
@@ -639,7 +692,6 @@ func TestJSONNumIncrBy(t *testing.T) {
 		{
 			name: "SimpleInt",
 			args: args{
-				conn:   conn,
 				key:    "kint",
 				path:   ".",
 				number: 5,
@@ -650,7 +702,6 @@ func TestJSONNumIncrBy(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn:   conn,
 				key:    "testObj",
 				path:   ".number",
 				number: 5,
@@ -661,7 +712,6 @@ func TestJSONNumIncrBy(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:   conn,
 				key:    "kstr",
 				path:   ".",
 				number: 5,
@@ -672,7 +722,6 @@ func TestJSONNumIncrBy(t *testing.T) {
 		{
 			name: "SimpleStructNotOK",
 			args: args{
-				conn:   conn,
 				key:    "testObj",
 				path:   ".",
 				number: 5,
@@ -680,10 +729,22 @@ func TestJSONNumIncrBy(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected a number but found object"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONNumIncrBy(tt.args.conn, tt.args.key, tt.args.path, tt.args.number)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONNumIncrBy(tt.args.key, tt.args.path, tt.args.number)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONNumIncrBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -708,14 +769,18 @@ func TestJSONNumMultBy(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kint", ".", 2, false, false)
+	_, err = rh.JSONSet("kint", ".", 2)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -724,13 +789,13 @@ func TestJSONNumMultBy(t *testing.T) {
 		Number: 2,
 	}
 
-	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	_, err = rh.JSONSet("testObj", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn   redis.Conn
 		key    string
 		path   string
 		number int
@@ -744,7 +809,6 @@ func TestJSONNumMultBy(t *testing.T) {
 		{
 			name: "SimpleInt",
 			args: args{
-				conn:   conn,
 				key:    "kint",
 				path:   ".",
 				number: 5,
@@ -755,7 +819,6 @@ func TestJSONNumMultBy(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn:   conn,
 				key:    "testObj",
 				path:   ".number",
 				number: 5,
@@ -766,7 +829,6 @@ func TestJSONNumMultBy(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:   conn,
 				key:    "kstr",
 				path:   ".",
 				number: 5,
@@ -777,7 +839,6 @@ func TestJSONNumMultBy(t *testing.T) {
 		{
 			name: "SimpleStructNotOK",
 			args: args{
-				conn:   conn,
 				key:    "testObj",
 				path:   ".",
 				number: 5,
@@ -785,10 +846,22 @@ func TestJSONNumMultBy(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected a number but found object"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONNumMultBy(tt.args.conn, tt.args.key, tt.args.path, tt.args.number)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONNumMultBy(tt.args.key, tt.args.path, tt.args.number)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONNumMultBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -813,9 +886,12 @@ func TestJSONStrAppend(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -824,13 +900,13 @@ func TestJSONStrAppend(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	_, err = rh.JSONSet("testObj", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn       redis.Conn
 		key        string
 		path       string
 		jsonstring string
@@ -844,7 +920,6 @@ func TestJSONStrAppend(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn:       conn,
 				key:        "kstr",
 				path:       ".",
 				jsonstring: "\"Appended\"",
@@ -855,7 +930,6 @@ func TestJSONStrAppend(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn:       conn,
 				key:        "testObj",
 				path:       "name",
 				jsonstring: "\"24\"",
@@ -866,7 +940,6 @@ func TestJSONStrAppend(t *testing.T) {
 		{
 			name: "SimpleStructNotOK",
 			args: args{
-				conn:       conn,
 				key:        "testObj",
 				path:       "number",
 				jsonstring: "\"24\"",
@@ -874,10 +947,22 @@ func TestJSONStrAppend(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected string but found integer"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONStrAppend(tt.args.conn, tt.args.key, tt.args.path, tt.args.jsonstring)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONStrAppend(tt.args.key, tt.args.path, tt.args.jsonstring)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONStrAppend() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -902,9 +987,12 @@ func TestJSONStrLen(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -913,13 +1001,13 @@ func TestJSONStrLen(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "testObj", ".", testObj, false, false)
+	_, err = rh.JSONSet("testObj", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -932,7 +1020,6 @@ func TestJSONStrLen(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
 				key:  "kstr",
 				path: ".",
 			},
@@ -942,7 +1029,6 @@ func TestJSONStrLen(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn: conn,
 				key:  "testObj",
 				path: "name",
 			},
@@ -952,17 +1038,28 @@ func TestJSONStrLen(t *testing.T) {
 		{
 			name: "SimpleStructNotOK",
 			args: args{
-				conn: conn,
 				key:  "testObj",
 				path: "number",
 			},
 			wantRes: redis.Error("ERR wrong type of path value - expected string but found integer"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONStrLen(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONStrLen(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONStrLen() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -987,14 +1084,17 @@ func TestJSONArrAppend(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	_, err = rh.JSONSet("karr", ".", values)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	appendValues := make([]interface{}, 0)
@@ -1003,13 +1103,13 @@ func TestJSONArrAppend(t *testing.T) {
 		appendValues = append(appendValues, valueAppend)
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("kstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn   redis.Conn
 		key    string
 		path   string
 		values []interface{}
@@ -1023,7 +1123,6 @@ func TestJSONArrAppend(t *testing.T) {
 		{
 			name: "SimpleArray",
 			args: args{
-				conn:   conn,
 				key:    "karr",
 				path:   ".",
 				values: appendValues,
@@ -1034,7 +1133,6 @@ func TestJSONArrAppend(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:   conn,
 				key:    "kstr",
 				path:   ".",
 				values: appendValues,
@@ -1042,10 +1140,22 @@ func TestJSONArrAppend(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONArrAppend(tt.args.conn, tt.args.key, tt.args.path, tt.args.values...)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONArrAppend(tt.args.key, tt.args.path, tt.args.values...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONArrAppend() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1070,23 +1180,26 @@ func TestJSONArrLen(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	_, err = rh.JSONSet("karr", ".", values)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("kstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -1099,7 +1212,6 @@ func TestJSONArrLen(t *testing.T) {
 		{
 			name: "SimpleArray",
 			args: args{
-				conn: conn,
 				key:  "karr",
 				path: ".",
 			},
@@ -1109,17 +1221,28 @@ func TestJSONArrLen(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
 				key:  "kstr",
 				path: ".",
 			},
 			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONArrLen(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONArrLen(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONArrLen() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1144,24 +1267,27 @@ func TestJSONArrPop(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three", "four"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	_, err = rh.JSONSet("karr", ".", values)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("kstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn  redis.Conn
 		key   string
 		path  string
 		index int
@@ -1175,10 +1301,9 @@ func TestJSONArrPop(t *testing.T) {
 		{
 			name: "SimpleArrayLastPop",
 			args: args{
-				conn:  conn,
 				key:   "karr",
 				path:  ".",
-				index: PopArrLast,
+				index: rjs.PopArrLast,
 			},
 			wantRes: string("four"),
 			wantErr: false,
@@ -1186,7 +1311,6 @@ func TestJSONArrPop(t *testing.T) {
 		{
 			name: "SimpleArray2ndElementPop",
 			args: args{
-				conn:  conn,
 				key:   "karr",
 				path:  ".",
 				index: 1,
@@ -1197,18 +1321,29 @@ func TestJSONArrPop(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:  conn,
 				key:   "kstr",
 				path:  ".",
-				index: PopArrLast,
+				index: rjs.PopArrLast,
 			},
 			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantErr: true,
+		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := JSONArrPop(tt.args.conn, tt.args.key, tt.args.path, tt.args.index)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			res, err := rh.JSONArrPop(tt.args.key, tt.args.path, tt.args.index)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONArrPop() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1241,24 +1376,27 @@ func TestJSONArrIndex(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	_, err = rh.JSONSet("karr", ".", values)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("kstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn          redis.Conn
 		key           string
 		path          string
 		value         interface{}
@@ -1273,7 +1411,6 @@ func TestJSONArrIndex(t *testing.T) {
 		{
 			name: "SimpleArray",
 			args: args{
-				conn:  conn,
 				key:   "karr",
 				path:  ".",
 				value: "two",
@@ -1284,7 +1421,6 @@ func TestJSONArrIndex(t *testing.T) {
 		{
 			name: "SimpleArrayElementNotPresent",
 			args: args{
-				conn:  conn,
 				key:   "karr",
 				path:  ".",
 				value: "ten",
@@ -1295,7 +1431,6 @@ func TestJSONArrIndex(t *testing.T) {
 		{
 			name: "SimpleArrayElementOutOfRangeWithStart",
 			args: args{
-				conn:          conn,
 				key:           "karr",
 				path:          ".",
 				value:         "two",
@@ -1307,7 +1442,6 @@ func TestJSONArrIndex(t *testing.T) {
 		{
 			name: "SimpleArrayElementOutOfRange",
 			args: args{
-				conn:          conn,
 				key:           "karr",
 				path:          ".",
 				value:         "three",
@@ -1319,7 +1453,6 @@ func TestJSONArrIndex(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:  conn,
 				key:   "kstr",
 				path:  ".",
 				value: "one",
@@ -1327,11 +1460,23 @@ func TestJSONArrIndex(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
 
-			gotRes, err := JSONArrIndex(tt.args.conn, tt.args.key, tt.args.path, tt.args.value, tt.args.optionalRange...)
+			gotRes, err := rh.JSONArrIndex(tt.args.key, tt.args.path, tt.args.value, tt.args.optionalRange...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONArrIndex() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1358,24 +1503,27 @@ func TestJSONArrTrim(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three", "four"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	_, err = rh.JSONSet("karr", ".", values)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("kstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn  redis.Conn
 		key   string
 		path  string
 		start int
@@ -1390,7 +1538,6 @@ func TestJSONArrTrim(t *testing.T) {
 		{
 			name: "SimpleArray",
 			args: args{
-				conn:  conn,
 				key:   "karr",
 				path:  ".",
 				start: 1,
@@ -1402,7 +1549,6 @@ func TestJSONArrTrim(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:  conn,
 				key:   "kstr",
 				path:  ".",
 				start: 1,
@@ -1411,11 +1557,23 @@ func TestJSONArrTrim(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
 
-			gotRes, err := JSONArrTrim(tt.args.conn, tt.args.key, tt.args.path, tt.args.start, tt.args.end)
+			gotRes, err := rh.JSONArrTrim(tt.args.key, tt.args.path, tt.args.start, tt.args.end)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONArrTrim() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1441,14 +1599,17 @@ func TestJSONArrInsert(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"three"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = JSONSet(conn, "karr", ".", values, false, false)
+	_, err = rh.JSONSet("karr", ".", values)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	insertValues := make([]interface{}, 0)
@@ -1461,18 +1622,19 @@ func TestJSONArrInsert(t *testing.T) {
 	finalStrSlice = append(finalStrSlice, valuesInsertStr...)
 	finalStrSlice = append(finalStrSlice, valuesStr...)
 
-	_, err = JSONSet(conn, "kstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("kstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	fssM, err := json.Marshal(finalStrSlice)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn   redis.Conn
 		key    string
 		path   string
 		index  int
@@ -1488,7 +1650,6 @@ func TestJSONArrInsert(t *testing.T) {
 		{
 			name: "SimpleArray",
 			args: args{
-				conn:   conn,
 				key:    "karr",
 				path:   ".",
 				index:  0,
@@ -1501,7 +1662,6 @@ func TestJSONArrInsert(t *testing.T) {
 		{
 			name: "SimpleStringNotOK",
 			args: args{
-				conn:   conn,
 				key:    "kstr",
 				path:   ".",
 				index:  0,
@@ -1510,10 +1670,22 @@ func TestJSONArrInsert(t *testing.T) {
 			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONArrInsert(tt.args.conn, tt.args.key, tt.args.path, tt.args.index, tt.args.values...)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONArrInsert(tt.args.key, tt.args.path, tt.args.index, tt.args.values...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONArrInsert() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1524,7 +1696,7 @@ func TestJSONArrInsert(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				newArr, err := JSONGet(tt.args.conn, tt.args.key, tt.args.path)
+				newArr, err := rh.JSONGet(tt.args.key, tt.args.path)
 				if err != nil {
 					t.Errorf("JSONArrGet(): Failed to JSONGet")
 					return
@@ -1550,6 +1722,8 @@ func TestJSONObjLen(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	type Object struct {
 		Name      string `json:"name"`
@@ -1557,17 +1731,18 @@ func TestJSONObjLen(t *testing.T) {
 		LoggedOut bool   `json:"loggedOut"`
 	}
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	_, err = JSONSet(conn, "tobj", ".", obj, false, false)
+	_, err = rh.JSONSet("tobj", ".", obj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -1580,7 +1755,6 @@ func TestJSONObjLen(t *testing.T) {
 		{
 			name: "SimpleObject",
 			args: args{
-				conn: conn,
 				key:  "tobj",
 				path: ".",
 			},
@@ -1590,17 +1764,28 @@ func TestJSONObjLen(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
 				key:  "tstr",
 				path: ".",
 			},
 			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONObjLen(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONObjLen(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONObjLen() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1625,6 +1810,8 @@ func TestJSONObjKeys(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
 	type Object struct {
 		Name      string `json:"name"`
@@ -1632,17 +1819,18 @@ func TestJSONObjKeys(t *testing.T) {
 		LoggedOut bool   `json:"loggedOut"`
 	}
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	_, err = JSONSet(conn, "tobj", ".", obj, false, false)
+	_, err = rh.JSONSet("tobj", ".", obj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
-	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -1655,7 +1843,6 @@ func TestJSONObjKeys(t *testing.T) {
 		{
 			name: "SimpleObject",
 			args: args{
-				conn: conn,
 				key:  "tobj",
 				path: ".",
 			},
@@ -1665,17 +1852,28 @@ func TestJSONObjKeys(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
 				key:  "tstr",
 				path: ".",
 			},
 			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
 			wantErr: true,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONObjKeys(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONObjKeys(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONObjKeys() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1700,13 +1898,15 @@ func TestJSONDebug(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	type args struct {
-		conn       redis.Conn
 		subCommand string
 		key        string
 		path       string
@@ -1720,29 +1920,39 @@ func TestJSONDebug(t *testing.T) {
 		{
 			name: "Debug Help",
 			args: args{
-				conn:       conn,
-				subCommand: DebugHelpSubcommand,
+				subCommand: rjs.DebugHelpSubcommand,
 				key:        "tstr",
 				path:       ".",
 			},
-			wantRes: DebugHelpOutput,
+			wantRes: rjs.DebugHelpOutput,
 			wantErr: false,
 		},
 		{
 			name: "Debug Memory",
 			args: args{
-				conn:       conn,
-				subCommand: DebugMemorySubcommand,
+				subCommand: rjs.DebugMemorySubcommand,
 				key:        "tstr",
 				path:       ".",
 			},
 			wantRes: int64(36),
 			wantErr: false,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONDebug(tt.args.conn, tt.args.subCommand, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONDebug(tt.args.subCommand, tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONDebug() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1767,9 +1977,12 @@ func TestJSONForget(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "kstr", ".", "simplestring", false, false)
+	_, err = rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
@@ -1778,13 +1991,13 @@ func TestJSONForget(t *testing.T) {
 		Number: 1,
 	}
 
-	_, err = JSONSet(conn, "kstruct", ".", testObj, false, false)
+	_, err = rh.JSONSet("kstruct", ".", testObj)
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -1797,7 +2010,6 @@ func TestJSONForget(t *testing.T) {
 		{
 			name: "SimpleString",
 			args: args{
-				conn: conn,
 				key:  "kstr",
 				path: ".",
 			},
@@ -1807,7 +2019,6 @@ func TestJSONForget(t *testing.T) {
 		{
 			name: "SimpleStructFieldOK",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: "name",
 			},
@@ -1817,7 +2028,6 @@ func TestJSONForget(t *testing.T) {
 		{
 			name: "SimpleStructFieldNotOK",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: "foobar",
 			},
@@ -1827,17 +2037,28 @@ func TestJSONForget(t *testing.T) {
 		{
 			name: "SimpleStruct",
 			args: args{
-				conn: conn,
 				key:  "kstruct",
 				path: ".",
 			},
 			wantRes: int64(1),
 			wantErr: false,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := JSONForget(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONForget(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONForget() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1862,13 +2083,15 @@ func TestJSONResp(t *testing.T) {
 			t.Fatal("Failed to communicate to redis-server")
 		}
 	}()
+	rh := NewReJSONHandler()
+	rh.SetRedigoClient(conn)
 
-	_, err = JSONSet(conn, "tstr", ".", "SimpleString", false, false)
+	_, err = rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
+		t.Fatal("Failed to Set key ", err)
 		return
 	}
 	type args struct {
-		conn redis.Conn
 		key  string
 		path string
 	}
@@ -1880,16 +2103,26 @@ func TestJSONResp(t *testing.T) {
 		{
 			name: "RESP",
 			args: args{
-				conn: conn,
 				key:  "tstr",
 				path: ".",
 			},
 			wantErr: false,
 		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := JSONResp(tt.args.conn, tt.args.key, tt.args.path)
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			_, err := rh.JSONResp(tt.args.key, tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("JSONResp() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1897,4 +2130,3 @@ func TestJSONResp(t *testing.T) {
 		})
 	}
 }
-*/

@@ -1,5 +1,15 @@
 package rjs
 
+import "fmt"
+
+// Generic and Constant Errors to be returned to client to maintain stability
+var (
+	ErrInternal       = fmt.Errorf("error: internal client error")
+	NoClientSet       = fmt.Errorf("no redis client is set")
+	TooManyOptionals  = fmt.Errorf("error: too many optional arguments")
+	NeedAtleastOneArg = fmt.Errorf("error: need atleast one argument in varing field")
+)
+
 const (
 	// ClientInactive signifies that the client is inactive in Handler
 	ClientInactive = "inactive"
@@ -38,15 +48,17 @@ const (
 	ReJSONCommand_FORGET    ReJSONCommandID = 18
 	ReJSONCommand_RESP      ReJSONCommandID = 19
 
-	// JSONGet Command Options
-	GETOption_INDENT   GetOption = "INDENT"
-	GETOption_NEWLINE  GetOption = "NEWLINE"
-	GETOption_SPACE    GetOption = "SPACE"
-	GETOption_NOESCAPE GetOption = "NOESCAPE"
-
 	// JSONSET command Options
 	SetOption_NX SetOption = "NX"
 	SetOption_XX SetOption = "XX"
+)
+
+// JSONGet Command Options
+var (
+	GETOption_SPACE    = GetOption{"SPACE", " "}
+	GETOption_INDENT   = GetOption{"INDENT", "\t"}
+	GETOption_NEWLINE  = GetOption{"NEWLINE", "\n"}
+	GETOption_NOESCAPE = GetOption{"NOESCAPE", ""}
 )
 
 // commandName maps command id to the command name
