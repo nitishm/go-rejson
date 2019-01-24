@@ -40,7 +40,7 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
-func commandJSONgeneric(argsIn ...interface{}) (argsOut []interface{}, err error) {
+func commandJSONGeneric(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key, path)
