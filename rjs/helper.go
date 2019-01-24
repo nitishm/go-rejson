@@ -14,6 +14,18 @@ func BytesToString(lst interface{}) (str string) {
 	return
 }
 
+// StringToBytes converts each character of the string slice into byte, else panic out
+func StringToBytes(lst interface{}) (by []byte) {
+	_lst, ok := lst.(string)
+	if !ok {
+		panic("error: something went wrong")
+	}
+	for _, s := range _lst {
+		by = append(by, byte(s))
+	}
+	return
+}
+
 // Value returns integral value of the ReJSON Command ID
 func (r ReJSONCommandID) Value() int32 {
 	return int32(r)

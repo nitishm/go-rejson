@@ -6,13 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gomodule/redigo/redis"
+	goredis "github.com/go-redis/redis"
+	redigo "github.com/gomodule/redigo/redis"
 )
-
-type TestObject struct {
-	Name   string `json:"name"`
-	Number int    `json:"number"`
-}
 
 func TestUnsupportedCommand(t *testing.T) {
 	_, _, err := rjs.CommandBuilder(1234, nil)
@@ -22,21 +18,212 @@ func TestUnsupportedCommand(t *testing.T) {
 	}
 }
 
-func TestJSONSet(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
+func TestRedigo(t *testing.T) {
+	rh := NewReJSONHandler()
+
+	// Redigo Test
+	conn, err := redigo.Dial("tcp", ":6379")
 	if err != nil {
-		t.Fatal("Could not connect to redis.")
+		t.Fatalf("redigo - could not connect to redigo: %v", err)
 		return
 	}
 	defer func() {
 		_, err = conn.Do("FLUSHALL")
+		if err != nil {
+			t.Fatalf("redigo - failed to flush: %v", err)
+		}
 		err = conn.Close()
 		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
+			t.Fatalf("redigo - failed to close: %v", err)
 		}
 	}()
+
+	t.Run("TestJSONSET", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONSet(rh, t)
+	})
+	t.Run("TestJSONGet", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONGet(rh, t)
+	})
+	t.Run("TestJSONDel", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONDel(rh, t)
+	})
+	t.Run("TestJSONMGet", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONMGet(rh, t)
+	})
+	t.Run("TestJSONType", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONType(rh, t)
+	})
+	t.Run("TestJSONNumIncrBy", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONNumIncrBy(rh, t)
+	})
+	t.Run("TestJSONNumMultBy", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONNumMultBy(rh, t)
+	})
+	t.Run("TestJSONStrAppend", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONStrAppend(rh, t)
+	})
+	t.Run("TestJSONStrLen", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONStrLen(rh, t)
+	})
+	t.Run("TestJSONArrAppend", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONArrAppend(rh, t)
+	})
+	t.Run("TestJSONArrLen", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONArrLen(rh, t)
+	})
+	t.Run("TestJSONArrPop", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONArrPop(rh, t)
+	})
+	t.Run("TestJSONArrIndex", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONArrIndex(rh, t)
+	})
+	t.Run("TestJSONArrTrim", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONArrTrim(rh, t)
+	})
+	t.Run("TestJSONArrInsert", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONArrInsert(rh, t)
+	})
+	t.Run("TestJSONObjLen", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONObjLen(rh, t)
+	})
+	t.Run("TestJSONObjKeys", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONObjKeys(rh, t)
+	})
+	t.Run("TestJSONDebug", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONDebug(rh, t)
+	})
+	t.Run("TestJSONForget", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONForget(rh, t)
+	})
+	t.Run("TestJSONResp", func(t *testing.T) {
+		rh.SetRedigoClient(conn)
+		testJSONResp(rh, t)
+	})
+
+}
+
+func TestGoRedis(t *testing.T) {
 	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+
+	// GoRedis Test
+	red := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
+	defer func() {
+		if err := red.FlushAll().Err(); err != nil {
+			t.Fatalf("goredis - failed to flush: %v", err)
+		}
+		if err := red.Close(); err != nil {
+			t.Fatalf("goredis - failed to communicate to redis-server: %v", err)
+		}
+	}()
+
+	t.Run("TestJSONSet", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONSet(rh, t)
+	})
+	t.Run("TestJSONGet", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONGet(rh, t)
+	})
+	t.Run("TestJSONDel", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONDel(rh, t)
+	})
+	t.Run("TestJSONMGet", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONMGet(rh, t)
+	})
+	t.Run("TestJSONType", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONType(rh, t)
+	})
+	t.Run("TestJSONNumIncrBy", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONNumIncrBy(rh, t)
+	})
+	t.Run("TestJSONNumMultBy", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONNumMultBy(rh, t)
+	})
+	t.Run("TestJSONStrAppend", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONStrAppend(rh, t)
+	})
+	t.Run("TestJSONStrLen", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONStrLen(rh, t)
+	})
+	t.Run("TestJSONArrAppend", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONArrAppend(rh, t)
+	})
+	t.Run("TestJSONArrLen", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONArrLen(rh, t)
+	})
+	t.Run("TestJSONArrPop", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONArrPop(rh, t)
+	})
+	t.Run("TestJSONArrIndex", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONArrIndex(rh, t)
+	})
+	t.Run("TestJSONArrTrim", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONArrTrim(rh, t)
+	})
+	t.Run("TestJSONArrInsert", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONArrInsert(rh, t)
+	})
+	t.Run("TestJSONObjLen", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONObjLen(rh, t)
+	})
+	t.Run("TestJSONObjKeys", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONObjKeys(rh, t)
+	})
+	t.Run("TestJSONDebug", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONDebug(rh, t)
+	})
+	t.Run("TestJSONForget", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONForget(rh, t)
+	})
+	t.Run("TestJSONResp", func(t *testing.T) {
+		rh.SetGoRedisClient(red)
+		testJSONResp(rh, t)
+	})
+
+}
+
+type TestObject struct {
+	Name   string `json:"name"`
+	Number int    `json:"number"`
+}
+
+func testJSONSet(rh *Handler, t *testing.T) {
 
 	testObj := TestObject{
 		"item#1",
@@ -100,7 +287,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrnx",
 				path: ".",
 				obj:  123,
-				opt:  []rjs.SetOption{rjs.SetOption_NX},
+				opt:  []rjs.SetOption{rjs.SetOptionNX},
 			},
 			wantRes: "OK",
 			wantErr: false,
@@ -111,7 +298,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrnx",
 				path: ".",
 				obj:  "simplestringnx",
-				opt:  []rjs.SetOption{rjs.SetOption_NX},
+				opt:  []rjs.SetOption{rjs.SetOptionNX},
 			},
 			wantRes: nil,
 			wantErr: false,
@@ -122,7 +309,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrnx",
 				path: ".",
 				obj:  "simplestringfoo",
-				opt:  []rjs.SetOption{rjs.SetOption_XX},
+				opt:  []rjs.SetOption{rjs.SetOptionXX},
 			},
 			wantRes: "OK",
 			wantErr: false,
@@ -133,7 +320,7 @@ func TestJSONSet(t *testing.T) {
 				key:  "kstrxx",
 				path: ".",
 				obj:  "simplestringfoobar",
-				opt:  []rjs.SetOption{rjs.SetOption_XX},
+				opt:  []rjs.SetOption{rjs.SetOptionXX},
 			},
 			wantRes: nil,
 			wantErr: false,
@@ -159,30 +346,16 @@ func TestJSONSet(t *testing.T) {
 				t.Errorf("JSONSet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONSet() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONGet(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONGet(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -252,10 +425,10 @@ func TestJSONGet(t *testing.T) {
 				key:  "kstruct",
 				path: ".",
 				options: []rjs.GetOption{
-					rjs.GETOption_INDENT,
-					rjs.GETOption_NEWLINE,
-					rjs.GETOption_NOESCAPE,
-					rjs.GETOption_SPACE,
+					rjs.GETOptionINDENT,
+					rjs.GETOptionNEWLINE,
+					rjs.GETOptionNOESCAPE,
+					rjs.GETOptionSPACE,
 				},
 			},
 			wantRes: []byte("{\n\t\"name\": \"Item#1\",\n\t\"number\": 1\n}"),
@@ -281,30 +454,16 @@ func TestJSONGet(t *testing.T) {
 				t.Errorf("JSONGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("\nJSONGet() = %v,\nwant      = %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONDel(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONDel(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -387,30 +546,16 @@ func TestJSONDel(t *testing.T) {
 				t.Errorf("JSONDel() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONDel() = %t, want %t", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONMGet(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONMGet(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -526,30 +671,16 @@ func TestJSONMGet(t *testing.T) {
 				t.Errorf("JSONMGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONMGet() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONType(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONType(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -632,30 +763,16 @@ func TestJSONType(t *testing.T) {
 				t.Errorf("JSONType() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONType() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONNumIncrBy(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONNumIncrBy(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kint", ".", 1)
+	_, err := rh.JSONSet("kint", ".", 1)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -716,7 +833,7 @@ func TestJSONNumIncrBy(t *testing.T) {
 				path:   ".",
 				number: 5,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected a number but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected a number but found string"),
 			wantErr: true,
 		},
 		{
@@ -726,7 +843,7 @@ func TestJSONNumIncrBy(t *testing.T) {
 				path:   ".",
 				number: 5,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected a number but found object"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected a number but found object"),
 			wantErr: true,
 		},
 		{
@@ -749,30 +866,16 @@ func TestJSONNumIncrBy(t *testing.T) {
 				t.Errorf("JSONNumIncrBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONNumIncrBy() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONNumMultBy(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONNumMultBy(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kint", ".", 2)
+	_, err := rh.JSONSet("kint", ".", 2)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -833,7 +936,7 @@ func TestJSONNumMultBy(t *testing.T) {
 				path:   ".",
 				number: 5,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected a number but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected a number but found string"),
 			wantErr: true,
 		},
 		{
@@ -843,7 +946,7 @@ func TestJSONNumMultBy(t *testing.T) {
 				path:   ".",
 				number: 5,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected a number but found object"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected a number but found object"),
 			wantErr: true,
 		},
 		{
@@ -866,30 +969,16 @@ func TestJSONNumMultBy(t *testing.T) {
 				t.Errorf("JSONNumMultBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONNumMultBy() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONStrAppend(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONStrAppend(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -944,7 +1033,7 @@ func TestJSONStrAppend(t *testing.T) {
 				path:       "number",
 				jsonstring: "\"24\"",
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected string but found integer"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected string but found integer"),
 			wantErr: true,
 		},
 		{
@@ -967,30 +1056,16 @@ func TestJSONStrAppend(t *testing.T) {
 				t.Errorf("JSONStrAppend() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONStrAppend() = %v, want %t", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONStrLen(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONStrLen(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1041,7 +1116,7 @@ func TestJSONStrLen(t *testing.T) {
 				key:  "testObj",
 				path: "number",
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected string but found integer"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected string but found integer"),
 			wantErr: true,
 		},
 		{
@@ -1064,35 +1139,21 @@ func TestJSONStrLen(t *testing.T) {
 				t.Errorf("JSONStrLen() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONStrLen() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONArrAppend(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONArrAppend(rh *Handler, t *testing.T) {
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = rh.JSONSet("karr", ".", values)
+	_, err := rh.JSONSet("karr", ".", values)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1137,7 +1198,7 @@ func TestJSONArrAppend(t *testing.T) {
 				path:   ".",
 				values: appendValues,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
 		{
@@ -1160,35 +1221,21 @@ func TestJSONArrAppend(t *testing.T) {
 				t.Errorf("JSONArrAppend() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONArrAppend() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONArrLen(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONArrLen(rh *Handler, t *testing.T) {
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = rh.JSONSet("karr", ".", values)
+	_, err := rh.JSONSet("karr", ".", values)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1224,7 +1271,7 @@ func TestJSONArrLen(t *testing.T) {
 				key:  "kstr",
 				path: ".",
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
 		{
@@ -1247,35 +1294,21 @@ func TestJSONArrLen(t *testing.T) {
 				t.Errorf("JSONArrLen() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONArrLen() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONArrPop(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONArrPop(rh *Handler, t *testing.T) {
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three", "four"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = rh.JSONSet("karr", ".", values)
+	_, err := rh.JSONSet("karr", ".", values)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1325,7 +1358,7 @@ func TestJSONArrPop(t *testing.T) {
 				path:  ".",
 				index: rjs.PopArrLast,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
 		{
@@ -1355,7 +1388,7 @@ func TestJSONArrPop(t *testing.T) {
 					t.Errorf("JSONArrPop(): Failed to JSON Unmarshal")
 					return
 				}
-				if !reflect.DeepEqual(gotRes, tt.wantRes) {
+				if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 					t.Errorf("JSONArrPop() = %v, want %v", gotRes, tt.wantRes)
 				}
 			}
@@ -1363,28 +1396,14 @@ func TestJSONArrPop(t *testing.T) {
 	}
 }
 
-func TestJSONArrIndex(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONArrIndex(rh *Handler, t *testing.T) {
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = rh.JSONSet("karr", ".", values)
+	_, err := rh.JSONSet("karr", ".", values)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1457,7 +1476,7 @@ func TestJSONArrIndex(t *testing.T) {
 				path:  ".",
 				value: "one",
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
 		{
@@ -1490,28 +1509,14 @@ func TestJSONArrIndex(t *testing.T) {
 	}
 }
 
-func TestJSONArrTrim(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONArrTrim(rh *Handler, t *testing.T) {
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"one", "two", "three", "four"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = rh.JSONSet("karr", ".", values)
+	_, err := rh.JSONSet("karr", ".", values)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1554,7 +1559,7 @@ func TestJSONArrTrim(t *testing.T) {
 				start: 1,
 				end:   2,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
 		{
@@ -1578,7 +1583,7 @@ func TestJSONArrTrim(t *testing.T) {
 				t.Errorf("JSONArrTrim() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONArrTrim() = %v, want %v", gotRes, tt.wantRes)
 			}
 
@@ -1586,28 +1591,14 @@ func TestJSONArrTrim(t *testing.T) {
 	}
 }
 
-func TestJSONArrInsert(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONArrInsert(rh *Handler, t *testing.T) {
 
 	values := make([]interface{}, 0)
 	valuesStr := []string{"three"}
 	for _, value := range valuesStr {
 		values = append(values, value)
 	}
-	_, err = rh.JSONSet("karr", ".", values)
+	_, err := rh.JSONSet("karr", ".", values)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1667,7 +1658,7 @@ func TestJSONArrInsert(t *testing.T) {
 				index:  0,
 				values: insertValues,
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected array but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected array but found string"),
 			wantErr: true,
 		},
 		{
@@ -1690,7 +1681,7 @@ func TestJSONArrInsert(t *testing.T) {
 				t.Errorf("JSONArrInsert() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONArrInsert() = %v, want %v", gotRes, tt.wantRes)
 				return
 			}
@@ -1709,21 +1700,7 @@ func TestJSONArrInsert(t *testing.T) {
 	}
 }
 
-func TestJSONObjLen(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONObjLen(rh *Handler, t *testing.T) {
 
 	type Object struct {
 		Name      string `json:"name"`
@@ -1731,7 +1708,7 @@ func TestJSONObjLen(t *testing.T) {
 		LoggedOut bool   `json:"loggedOut"`
 	}
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	_, err = rh.JSONSet("tobj", ".", obj)
+	_, err := rh.JSONSet("tobj", ".", obj)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1767,7 +1744,7 @@ func TestJSONObjLen(t *testing.T) {
 				key:  "tstr",
 				path: ".",
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected object but found string"),
 			wantErr: true,
 		},
 		{
@@ -1790,28 +1767,14 @@ func TestJSONObjLen(t *testing.T) {
 				t.Errorf("JSONObjLen() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONObjLen() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONObjKeys(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONObjKeys(rh *Handler, t *testing.T) {
 
 	type Object struct {
 		Name      string `json:"name"`
@@ -1819,7 +1782,7 @@ func TestJSONObjKeys(t *testing.T) {
 		LoggedOut bool   `json:"loggedOut"`
 	}
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	_, err = rh.JSONSet("tobj", ".", obj)
+	_, err := rh.JSONSet("tobj", ".", obj)
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1855,7 +1818,7 @@ func TestJSONObjKeys(t *testing.T) {
 				key:  "tstr",
 				path: ".",
 			},
-			wantRes: redis.Error("ERR wrong type of path value - expected object but found string"),
+			wantRes: redigo.Error("ERR wrong type of path value - expected object but found string"),
 			wantErr: true,
 		},
 		{
@@ -1878,30 +1841,16 @@ func TestJSONObjKeys(t *testing.T) {
 				t.Errorf("JSONObjKeys() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONObjKeys() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONDebug(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONDebug(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("tstr", ".", "SimpleString")
+	_, err := rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -1957,30 +1906,16 @@ func TestJSONDebug(t *testing.T) {
 				t.Errorf("JSONDebug() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONDebug() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONForget(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONForget(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("kstr", ".", "simplestring")
+	_, err := rh.JSONSet("kstr", ".", "simplestring")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return
@@ -2063,30 +1998,16 @@ func TestJSONForget(t *testing.T) {
 				t.Errorf("JSONForget() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRes, tt.wantRes) {
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONForget() = %t, want %t", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func TestJSONResp(t *testing.T) {
-	conn, err := redis.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatal("Could not connect to redis.")
-		return
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			t.Fatal("Failed to communicate to redis-server")
-		}
-	}()
-	rh := NewReJSONHandler()
-	rh.SetRedigoClient(conn)
+func testJSONResp(rh *Handler, t *testing.T) {
 
-	_, err = rh.JSONSet("tstr", ".", "SimpleString")
+	_, err := rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
 		t.Fatal("Failed to Set key ", err)
 		return

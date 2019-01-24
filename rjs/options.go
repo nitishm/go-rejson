@@ -27,12 +27,12 @@ type GetOption struct {
 
 // MethodID returns the name of the method i.e. JSON.GET
 func (g GetOption) MethodID() ReJSONCommandID {
-	return ReJSONCommand_GET
+	return ReJSONCommandGET
 }
 
 // Value returns the value of the option being used
 func (g GetOption) Value() []interface{} {
-	if g.name == GETOption_NOESCAPE.name {
+	if g.name == GETOptionNOESCAPE.name {
 		return []interface{}{g.name}
 	}
 	return []interface{}{g.name, g.Arg}
@@ -49,7 +49,7 @@ type SetOption string
 
 // MethodID returns the name of the method i.e. JSON.SET
 func (g SetOption) MethodID() ReJSONCommandID {
-	return ReJSONCommand_SET
+	return ReJSONCommandSET
 }
 
 // Value returns the value of the option being used

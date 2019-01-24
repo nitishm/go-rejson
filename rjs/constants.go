@@ -4,10 +4,13 @@ import "fmt"
 
 // Generic and Constant Errors to be returned to client to maintain stability
 var (
-	ErrInternal       = fmt.Errorf("error: internal client error")
-	NoClientSet       = fmt.Errorf("no redis client is set")
-	TooManyOptionals  = fmt.Errorf("error: too many optional arguments")
-	NeedAtleastOneArg = fmt.Errorf("error: need atleast one argument in varing field")
+	ErrInternal          = fmt.Errorf("error: internal client error")
+	ErrNoClientSet       = fmt.Errorf("no redis client is set")
+	ErrTooManyOptionals  = fmt.Errorf("error: too many optional arguments")
+	ErrNeedAtleastOneArg = fmt.Errorf("error: need atleast one argument in varing field")
+
+	// GoRedis specific Nil error
+	ErrGoRedisNil = fmt.Errorf("redis: nil")
 )
 
 const (
@@ -27,84 +30,84 @@ const (
 	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"
 
 	// ReJSON Commands
-	ReJSONCommand_SET       ReJSONCommandID = 0
-	ReJSONCommand_GET       ReJSONCommandID = 1
-	ReJSONCommand_DEL       ReJSONCommandID = 2
-	ReJSONCommand_MGET      ReJSONCommandID = 3
-	ReJSONCommand_TYPE      ReJSONCommandID = 4
-	ReJSONCommand_NUMINCRBY ReJSONCommandID = 5
-	ReJSONCommand_NUMMULTBY ReJSONCommandID = 6
-	ReJSONCommand_STRAPPEND ReJSONCommandID = 7
-	ReJSONCommand_STRLEN    ReJSONCommandID = 8
-	ReJSONCommand_ARRAPPEND ReJSONCommandID = 9
-	ReJSONCommand_ARRLEN    ReJSONCommandID = 10
-	ReJSONCommand_ARRPOP    ReJSONCommandID = 11
-	ReJSONCommand_ARRINDEX  ReJSONCommandID = 12
-	ReJSONCommand_ARRTRIM   ReJSONCommandID = 13
-	ReJSONCommand_ARRINSERT ReJSONCommandID = 14
-	ReJSONCommand_OBJKEYS   ReJSONCommandID = 15
-	ReJSONCommand_OBJLEN    ReJSONCommandID = 16
-	ReJSONCommand_DEBUG     ReJSONCommandID = 17
-	ReJSONCommand_FORGET    ReJSONCommandID = 18
-	ReJSONCommand_RESP      ReJSONCommandID = 19
+	ReJSONCommandSET       ReJSONCommandID = 0
+	ReJSONCommandGET       ReJSONCommandID = 1
+	ReJSONCommandDEL       ReJSONCommandID = 2
+	ReJSONCommandMGET      ReJSONCommandID = 3
+	ReJSONCommandTYPE      ReJSONCommandID = 4
+	ReJSONCommandNUMINCRBY ReJSONCommandID = 5
+	ReJSONCommandNUMMULTBY ReJSONCommandID = 6
+	ReJSONCommandSTRAPPEND ReJSONCommandID = 7
+	ReJSONCommandSTRLEN    ReJSONCommandID = 8
+	ReJSONCommandARRAPPEND ReJSONCommandID = 9
+	ReJSONCommandARRLEN    ReJSONCommandID = 10
+	ReJSONCommandARRPOP    ReJSONCommandID = 11
+	ReJSONCommandARRINDEX  ReJSONCommandID = 12
+	ReJSONCommandARRTRIM   ReJSONCommandID = 13
+	ReJSONCommandARRINSERT ReJSONCommandID = 14
+	ReJSONCommandOBJKEYS   ReJSONCommandID = 15
+	ReJSONCommandOBJLEN    ReJSONCommandID = 16
+	ReJSONCommandDEBUG     ReJSONCommandID = 17
+	ReJSONCommandFORGET    ReJSONCommandID = 18
+	ReJSONCommandRESP      ReJSONCommandID = 19
 
 	// JSONSET command Options
-	SetOption_NX SetOption = "NX"
-	SetOption_XX SetOption = "XX"
+	SetOptionNX SetOption = "NX"
+	SetOptionXX SetOption = "XX"
 )
 
 // JSONGet Command Options
 var (
-	GETOption_SPACE    = GetOption{"SPACE", " "}
-	GETOption_INDENT   = GetOption{"INDENT", "\t"}
-	GETOption_NEWLINE  = GetOption{"NEWLINE", "\n"}
-	GETOption_NOESCAPE = GetOption{"NOESCAPE", ""}
+	GETOptionSPACE    = GetOption{"SPACE", " "}
+	GETOptionINDENT   = GetOption{"INDENT", "\t"}
+	GETOptionNEWLINE  = GetOption{"NEWLINE", "\n"}
+	GETOptionNOESCAPE = GetOption{"NOESCAPE", ""}
 )
 
 // commandName maps command id to the command name
 var commandName = map[ReJSONCommandID]string{
-	ReJSONCommand_SET:       "JSON.SET",
-	ReJSONCommand_GET:       "JSON.GET",
-	ReJSONCommand_DEL:       "JSON.DEL",
-	ReJSONCommand_MGET:      "JSON.MGET",
-	ReJSONCommand_TYPE:      "JSON.TYPE",
-	ReJSONCommand_NUMINCRBY: "JSON.NUMINCRBY",
-	ReJSONCommand_NUMMULTBY: "JSON.NUMMULTBY",
-	ReJSONCommand_STRAPPEND: "JSON.STRAPPEND",
-	ReJSONCommand_STRLEN:    "JSON.STRLEN",
-	ReJSONCommand_ARRAPPEND: "JSON.ARRAPPEND",
-	ReJSONCommand_ARRLEN:    "JSON.ARRLEN",
-	ReJSONCommand_ARRPOP:    "JSON.ARRPOP",
-	ReJSONCommand_ARRINDEX:  "JSON.ARRINDEX",
-	ReJSONCommand_ARRTRIM:   "JSON.ARRTRIM",
-	ReJSONCommand_ARRINSERT: "JSON.ARRINSERT",
-	ReJSONCommand_OBJKEYS:   "JSON.OBJKEYS",
-	ReJSONCommand_OBJLEN:    "JSON.OBJLEN",
-	ReJSONCommand_DEBUG:     "JSON.DEBUG",
-	ReJSONCommand_FORGET:    "JSON.FORGET",
-	ReJSONCommand_RESP:      "JSON.RESP",
+	ReJSONCommandSET:       "JSON.SET",
+	ReJSONCommandGET:       "JSON.GET",
+	ReJSONCommandDEL:       "JSON.DEL",
+	ReJSONCommandMGET:      "JSON.MGET",
+	ReJSONCommandTYPE:      "JSON.TYPE",
+	ReJSONCommandNUMINCRBY: "JSON.NUMINCRBY",
+	ReJSONCommandNUMMULTBY: "JSON.NUMMULTBY",
+	ReJSONCommandSTRAPPEND: "JSON.STRAPPEND",
+	ReJSONCommandSTRLEN:    "JSON.STRLEN",
+	ReJSONCommandARRAPPEND: "JSON.ARRAPPEND",
+	ReJSONCommandARRLEN:    "JSON.ARRLEN",
+	ReJSONCommandARRPOP:    "JSON.ARRPOP",
+	ReJSONCommandARRINDEX:  "JSON.ARRINDEX",
+	ReJSONCommandARRTRIM:   "JSON.ARRTRIM",
+	ReJSONCommandARRINSERT: "JSON.ARRINSERT",
+	ReJSONCommandOBJKEYS:   "JSON.OBJKEYS",
+	ReJSONCommandOBJLEN:    "JSON.OBJLEN",
+	ReJSONCommandDEBUG:     "JSON.DEBUG",
+	ReJSONCommandFORGET:    "JSON.FORGET",
+	ReJSONCommandRESP:      "JSON.RESP",
 }
 
 // commandMux maps command id to their Command Builder functions
 var commandMux = map[ReJSONCommandID]CommandBuilderFunc{
-	ReJSONCommand_SET:       commandJSONSet,
-	ReJSONCommand_GET:       commandJSONGet,
-	ReJSONCommand_DEL:       commandJSONgeneric,
-	ReJSONCommand_MGET:      commandJSONMGet,
-	ReJSONCommand_TYPE:      commandJSONgeneric,
-	ReJSONCommand_NUMINCRBY: commandJSONNumIncrBy,
-	ReJSONCommand_NUMMULTBY: commandJSONNumMultBy,
-	ReJSONCommand_STRAPPEND: commandJSONStrAppend,
-	ReJSONCommand_STRLEN:    commandJSONgeneric,
-	ReJSONCommand_ARRAPPEND: commandJSONArrAppend,
-	ReJSONCommand_ARRLEN:    commandJSONgeneric,
-	ReJSONCommand_ARRPOP:    commandJSONArrPop,
-	ReJSONCommand_ARRINDEX:  commandJSONArrIndex,
-	ReJSONCommand_ARRTRIM:   commandJSONArrTrim,
-	ReJSONCommand_ARRINSERT: commandJSONArrInsert,
-	ReJSONCommand_OBJKEYS:   commandJSONgeneric,
-	ReJSONCommand_OBJLEN:    commandJSONgeneric,
-	ReJSONCommand_DEBUG:     commandJSONDebug,
-	ReJSONCommand_FORGET:    commandJSONgeneric,
-	ReJSONCommand_RESP:      commandJSONgeneric,
+	ReJSONCommandSET:       commandJSONSet,
+	ReJSONCommandGET:       commandJSONGet,
+	ReJSONCommandDEL:       commandJSONgeneric,
+	ReJSONCommandMGET:      commandJSONMGet,
+	ReJSONCommandTYPE:      commandJSONgeneric,
+	ReJSONCommandNUMINCRBY: commandJSONNumIncrBy,
+	ReJSONCommandNUMMULTBY: commandJSONNumMultBy,
+	ReJSONCommandSTRAPPEND: commandJSONStrAppend,
+	ReJSONCommandSTRLEN:    commandJSONgeneric,
+	ReJSONCommandARRAPPEND: commandJSONArrAppend,
+	ReJSONCommandARRLEN:    commandJSONgeneric,
+	ReJSONCommandARRPOP:    commandJSONArrPop,
+	ReJSONCommandARRINDEX:  commandJSONArrIndex,
+	ReJSONCommandARRTRIM:   commandJSONArrTrim,
+	ReJSONCommandARRINSERT: commandJSONArrInsert,
+	ReJSONCommandOBJKEYS:   commandJSONgeneric,
+	ReJSONCommandOBJLEN:    commandJSONgeneric,
+	ReJSONCommandDEBUG:     commandJSONDebug,
+	ReJSONCommandFORGET:    commandJSONgeneric,
+	ReJSONCommandRESP:      commandJSONgeneric,
 }
