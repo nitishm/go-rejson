@@ -18,203 +18,157 @@ func TestUnsupportedCommand(t *testing.T) {
 	}
 }
 
-func TestRedigo(t *testing.T) {
-	rh := NewReJSONHandler()
+type TestClient struct {
+	name string
+	conn interface{}
+	rh   *Handler
+}
 
-	// Redigo Test
-	conn, err := redigo.Dial("tcp", ":6379")
+func (t *TestClient) init() {
+	t.name = "-"
+	t.conn = "inactive"
+	t.rh = NewReJSONHandler()
+}
+
+func (t *TestClient) SetTestingClient(conn interface{}) {
+	t.conn = conn
+
+	switch conn := conn.(type) {
+	case redigo.Conn:
+		t.name = "Redigo-"
+		t.rh.SetRedigoClient(conn)
+	case *goredis.Client:
+		t.name = "GoRedis-"
+		t.rh.SetGoRedisClient(conn)
+	default:
+		t.name = "-"
+		t.conn = "inactive"
+		t.rh.SetClientInactive()
+	}
+}
+
+func TestReJSON(t *testing.T) {
+	test := TestClient{}
+	test.init()
+
+	// Redigo Test Client
+	redigoCli, err := redigo.Dial("tcp", ":6379")
 	if err != nil {
 		t.Fatalf("redigo - could not connect to redigo: %v", err)
 		return
 	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		if err != nil {
-			t.Fatalf("redigo - failed to flush: %v", err)
-		}
-		err = conn.Close()
-		if err != nil {
-			t.Fatalf("redigo - failed to close: %v", err)
-		}
-	}()
 
-	t.Run("TestJSONSET", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONSet(rh, t)
-	})
-	t.Run("TestJSONGet", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONGet(rh, t)
-	})
-	t.Run("TestJSONDel", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONDel(rh, t)
-	})
-	t.Run("TestJSONMGet", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONMGet(rh, t)
-	})
-	t.Run("TestJSONType", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONType(rh, t)
-	})
-	t.Run("TestJSONNumIncrBy", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONNumIncrBy(rh, t)
-	})
-	t.Run("TestJSONNumMultBy", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONNumMultBy(rh, t)
-	})
-	t.Run("TestJSONStrAppend", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONStrAppend(rh, t)
-	})
-	t.Run("TestJSONStrLen", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONStrLen(rh, t)
-	})
-	t.Run("TestJSONArrAppend", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONArrAppend(rh, t)
-	})
-	t.Run("TestJSONArrLen", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONArrLen(rh, t)
-	})
-	t.Run("TestJSONArrPop", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONArrPop(rh, t)
-	})
-	t.Run("TestJSONArrIndex", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONArrIndex(rh, t)
-	})
-	t.Run("TestJSONArrTrim", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONArrTrim(rh, t)
-	})
-	t.Run("TestJSONArrInsert", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONArrInsert(rh, t)
-	})
-	t.Run("TestJSONObjLen", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONObjLen(rh, t)
-	})
-	t.Run("TestJSONObjKeys", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONObjKeys(rh, t)
-	})
-	t.Run("TestJSONDebug", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONDebug(rh, t)
-	})
-	t.Run("TestJSONForget", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONForget(rh, t)
-	})
-	t.Run("TestJSONResp", func(t *testing.T) {
-		rh.SetRedigoClient(conn)
-		testJSONResp(rh, t)
-	})
+	// GoRedis Test Client
+	goredisCli := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
 
-}
+	clientsObj := []struct {
+		cli       interface{}
+		name      string
+		closeFunc func()
+	}{
+		{cli: redigoCli, name: "Redigo ", closeFunc: func() {
+			_, err = redigoCli.Do("FLUSHALL")
+			if err != nil {
+				t.Fatalf("redigo - failed to flush: %v", err)
+			}
+			err = redigoCli.Close()
+			if err != nil {
+				t.Fatalf("redigo - failed to close: %v", err)
+			}
+		}},
+		{cli: goredisCli, name: "GoRedis ", closeFunc: func() {
+			if err := goredisCli.FlushAll().Err(); err != nil {
+				t.Fatalf("goredis - failed to flush: %v", err)
+			}
+			if err := goredisCli.Close(); err != nil {
+				t.Fatalf("goredis - failed to communicate to redis-server: %v", err)
+			}
+		}},
+	}
 
-func TestGoRedis(t *testing.T) {
-	rh := NewReJSONHandler()
-
-	// GoRedis Test
-	red := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
-	defer func() {
-		if err := red.FlushAll().Err(); err != nil {
-			t.Fatalf("goredis - failed to flush: %v", err)
-		}
-		if err := red.Close(); err != nil {
-			t.Fatalf("goredis - failed to communicate to redis-server: %v", err)
-		}
-	}()
-
-	t.Run("TestJSONSet", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONSet(rh, t)
-	})
-	t.Run("TestJSONGet", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONGet(rh, t)
-	})
-	t.Run("TestJSONDel", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONDel(rh, t)
-	})
-	t.Run("TestJSONMGet", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONMGet(rh, t)
-	})
-	t.Run("TestJSONType", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONType(rh, t)
-	})
-	t.Run("TestJSONNumIncrBy", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONNumIncrBy(rh, t)
-	})
-	t.Run("TestJSONNumMultBy", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONNumMultBy(rh, t)
-	})
-	t.Run("TestJSONStrAppend", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONStrAppend(rh, t)
-	})
-	t.Run("TestJSONStrLen", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONStrLen(rh, t)
-	})
-	t.Run("TestJSONArrAppend", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONArrAppend(rh, t)
-	})
-	t.Run("TestJSONArrLen", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONArrLen(rh, t)
-	})
-	t.Run("TestJSONArrPop", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONArrPop(rh, t)
-	})
-	t.Run("TestJSONArrIndex", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONArrIndex(rh, t)
-	})
-	t.Run("TestJSONArrTrim", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONArrTrim(rh, t)
-	})
-	t.Run("TestJSONArrInsert", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONArrInsert(rh, t)
-	})
-	t.Run("TestJSONObjLen", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONObjLen(rh, t)
-	})
-	t.Run("TestJSONObjKeys", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONObjKeys(rh, t)
-	})
-	t.Run("TestJSONDebug", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONDebug(rh, t)
-	})
-	t.Run("TestJSONForget", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONForget(rh, t)
-	})
-	t.Run("TestJSONResp", func(t *testing.T) {
-		rh.SetGoRedisClient(red)
-		testJSONResp(rh, t)
-	})
+	for _, obj := range clientsObj {
+		t.Run(obj.name+"TestJSONSet", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONSet(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONGet", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONGet(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONDel", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONDel(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONMGet", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONMGet(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONType", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONType(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONNumIncrBy", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONNumIncrBy(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONNumMultBy", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONNumMultBy(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONStrAppend", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONStrAppend(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONStrLen", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONStrLen(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONArrAppend", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONArrAppend(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONArrLen", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONArrLen(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONArrPop", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONArrPop(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONArrIndex", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONArrIndex(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONArrTrim", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONArrTrim(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONArrInsert", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONArrInsert(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONObjLen", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONObjLen(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONObjKeys", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONObjKeys(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONDebug", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONDebug(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONForget", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONForget(test.rh, t)
+		})
+		t.Run(obj.name+"TestJSONResp", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONResp(test.rh, t)
+		})
+		obj.closeFunc()
+	}
 
 }
 
