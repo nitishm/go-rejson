@@ -1,6 +1,6 @@
 # Gopkg.toml example
 #
-# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
 # for detailed Gopkg.toml documentation.
 #
 # required = ["github.com/user/thing/cmd/thing"]
@@ -25,14 +25,14 @@
 #   unused-packages = true
 
 
-[prune]
-  go-tests = true
-  unused-packages = true
+[[constraint]]
+  name = "github.com/go-redis/redis"
+  version = "6.15.1"
 
 [[constraint]]
   name = "github.com/gomodule/redigo"
   version = "2.0.0"
 
-[[constraint]]
-  name = "github.com/rafaeljusto/redigomock"
-  version = "2.1.0"
+[prune]
+  go-tests = true
+  unused-packages = true
