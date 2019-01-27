@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/Shivam010/go-rejson"
-	"github.com/Shivam010/go-rejson/rjs"
+	"github.com/nitishm/go-rejson"
+	"github.com/nitishm/go-rejson/rjs"
 	"log"
 
 	goredis "github.com/go-redis/redis"

@@ -1,7 +1,7 @@
 package rejson
 
 import (
-	"github.com/Shivam010/go-rejson/rjs"
+	"github.com/nitishm/go-rejson/rjs"
 )
 
 type Handler struct {

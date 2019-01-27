@@ -34,7 +34,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Shivam010/go-rejson"
+	"github.com/nitishm/go-rejson"
 	goredis "github.com/go-redis/redis"
 	"github.com/gomodule/redigo/redis"
 )

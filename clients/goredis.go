@@ -2,8 +2,8 @@ package clients
 
 import (
 	"fmt"
-	"github.com/Shivam010/go-rejson/rjs"
 	goredis "github.com/go-redis/redis"
+	"github.com/nitishm/go-rejson/rjs"
 	"strings"
 )
 

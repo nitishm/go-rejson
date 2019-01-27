@@ -1,10 +1,10 @@
 package rejson
 
 import (
-	"github.com/Shivam010/go-rejson/clients"
-	"github.com/Shivam010/go-rejson/rjs"
 	goredis "github.com/go-redis/redis"
 	redigo "github.com/gomodule/redigo/redis"
+	"github.com/nitishm/go-rejson/clients"
+	"github.com/nitishm/go-rejson/rjs"
 )
 
 // RedisClient provides interface for Client handling in the ReJSON Handler
