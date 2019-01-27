@@ -1810,7 +1810,7 @@ func testJSONDebug(rh *Handler, t *testing.T) {
 		return
 	}
 	type args struct {
-		subCommand string
+		subCommand rjs.DebugSubCommand
 		key        string
 		path       string
 	}

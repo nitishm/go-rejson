@@ -1,32 +1,18 @@
 package main
 
-/*
 import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Shivam010/go-rejson"
+	"github.com/Shivam010/go-rejson/rjs"
 	"log"
 
+	goredis "github.com/go-redis/redis"
 	"github.com/gomodule/redigo/redis"
-	"github.com/nitishm/go-rejson"
 )
 
-func main() {
-	var addr = flag.String("Server", "localhost:6379", "Redis server address")
-
-	flag.Parse()
-
-	conn, err := redis.Dial("tcp", *addr)
-	if err != nil {
-		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
-	}
-	defer func() {
-		_, err = conn.Do("FLUSHALL")
-		err = conn.Close()
-		if err != nil {
-			log.Fatalf("Failed to communicate to redis-server @ %v", err)
-		}
-	}()
+func Example_JSONObj(rh *rejson.Handler) {
 
 	type Object struct {
 		Name      string `json:"name"`
@@ -35,14 +21,14 @@ func main() {
 	}
 
 	obj := Object{"Leonard Cohen", 1478476800, true}
-	res, err := rejson.JSONSet(conn, "obj", ".", obj, false, false)
+	res, err := rh.JSONSet("obj", ".", obj)
 	if err != nil {
 		log.Fatalf("Failed to JSONSet")
 		return
 	}
 	fmt.Println("obj:", res)
 
-	res, err = rejson.JSONGet(conn, "obj", ".")
+	res, err = rh.JSONGet("obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONGet")
 		return
@@ -55,36 +41,36 @@ func main() {
 	}
 	fmt.Println("got obj:", objOut)
 
-	res, err = rejson.JSONObjLen(conn, "obj", ".")
+	res, err = rh.JSONObjLen("obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONObjLen")
 		return
 	}
 	fmt.Println("length:", res)
 
-	res, err = rejson.JSONObjKeys(conn, "obj", ".")
+	res, err = rh.JSONObjKeys("obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONObjKeys")
 		return
 	}
 	fmt.Println("keys:", res)
 
-	res, err = rejson.JSONDebug(conn, rejson.DebugHelpSubcommand, "obj", ".")
+	res, err = rh.JSONDebug(rjs.DebugHelpSubcommand, "obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONDebug")
 		return
 	}
 	fmt.Println(res)
-	res, err = rejson.JSONDebug(conn, rejson.DebugMemorySubcommand, "obj", ".")
+	res, err = rh.JSONDebug(rjs.DebugMemorySubcommand, "obj", ".")
 	if err != nil {
 		log.Fatalf("Failed to JSONDebug")
 		return
 	}
 	fmt.Println("Memory used by obj:", res)
 
-	res, err = rejson.JSONGet(conn, "obj", ".",
-		rejson.NewJSONGetOptionIndent("\t"), rejson.NewJSONGetOptionNewLine("\n"),
-		rejson.NewJSONGetOptionSpace(" "), rejson.NewJSONGetOptionNoEscape())
+	res, err = rh.JSONGet("obj", ".",
+		rjs.GETOptionINDENT, rjs.GETOptionNEWLINE,
+		rjs.GETOptionNOESCAPE, rjs.GETOptionSPACE)
 	if err != nil {
 		log.Fatalf("Failed to JSONGet")
 		return
@@ -96,4 +82,40 @@ func main() {
 	}
 	fmt.Println("got obj with options:", objOut)
 }
-*/
+
+func main() {
+	var addr = flag.String("Server", "localhost:6379", "Redis server address")
+
+	rh := rejson.NewReJSONHandler()
+	flag.Parse()
+
+	// Redigo Client
+	conn, err := redis.Dial("tcp", *addr)
+	if err != nil {
+		log.Fatalf("Failed to connect to redis-server @ %s", *addr)
+	}
+	defer func() {
+		_, err = conn.Do("FLUSHALL")
+		err = conn.Close()
+		if err != nil {
+			log.Fatalf("Failed to communicate to redis-server @ %v", err)
+		}
+	}()
+	rh.SetRedigoClient(conn)
+	fmt.Println("Executing Example_JSONSET for Redigo Client")
+	Example_JSONObj(rh)
+
+	// GoRedis Client
+	cli := goredis.NewClient(&goredis.Options{Addr: *addr})
+	defer func() {
+		if err := cli.FlushAll().Err(); err != nil {
+			log.Fatalf("goredis - failed to flush: %v", err)
+		}
+		if err := cli.Close(); err != nil {
+			log.Fatalf("goredis - failed to communicate to redis-server: %v", err)
+		}
+	}()
+	rh.SetGoRedisClient(cli)
+	fmt.Println("\nExecuting Example_JSONSET for Redigo Client")
+	Example_JSONObj(rh)
+}

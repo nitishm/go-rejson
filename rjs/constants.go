@@ -21,10 +21,10 @@ const (
 	PopArrLast = -1
 
 	// DebugMemorySubcommand provide the corresponding MEMORY sub commands for JSONDebug
-	DebugMemorySubcommand = "MEMORY"
+	DebugMemorySubcommand DebugSubCommand = "MEMORY"
 
 	// DebugHelpSubcommand provide the corresponding HELP sub commands for JSONDebug
-	DebugHelpSubcommand = "HELP"
+	DebugHelpSubcommand DebugSubCommand = "HELP"
 
 	// DebugHelpOutput is the output of command JSON.Debug HELP <obj> [path]
 	DebugHelpOutput = "MEMORY <key> [path] - reports memory usage\nHELP                - this message"

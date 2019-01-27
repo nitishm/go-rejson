@@ -49,7 +49,7 @@ type ReJSON interface {
 
 	JSONObjLen(key, path string) (res interface{}, err error)
 
-	JSONDebug(subCmd, key, path string) (res interface{}, err error)
+	JSONDebug(subCmd rjs.DebugSubCommand, key, path string) (res interface{}, err error)
 
 	JSONForget(key, path string) (res interface{}, err error)
 
@@ -278,7 +278,7 @@ func (r *Handler) JSONObjLen(key, path string) (res interface{}, err error) {
 //		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
 //		JSON.DEBUG HELP					- reply with a helpful message
 //
-func (r *Handler) JSONDebug(subCmd, key, path string) (res interface{}, err error) {
+func (r *Handler) JSONDebug(subCmd rjs.DebugSubCommand, key, path string) (res interface{}, err error) {
 	if r.clientName == rjs.ClientInactive {
 		return nil, rjs.ErrNoClientSet
 	}

@@ -9,6 +9,9 @@ import (
 // to ensure proper type safety and help reducing typos in using them.
 type ReJSONCommandID int32
 
+// DebugSubCommand provides the abstract sub-commands for the JSON.DEBUG command
+type DebugSubCommand string
+
 // CommandBuilderFunc uses for the simplicity of the corresponding ReJSON module command builders
 type CommandBuilderFunc func(argsIn ...interface{}) (argsOut []interface{}, err error)
 
@@ -169,8 +172,7 @@ func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) 
 // along with some other operations like
 // 	GET/SET/HGET/HSET/...
 //
-func CommandBuilder(commandNameIn ReJSONCommandID, argsIn ...interface{}) (
-	commandNameOut string, argsOut []interface{}, err error) {
+func CommandBuilder(commandNameIn ReJSONCommandID, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) { // nolint: lll
 
 	cmd, commandNameOut, err := commandNameIn.Details()
 

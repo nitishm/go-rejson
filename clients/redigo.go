@@ -19,8 +19,7 @@ type Redigo struct {
 // 	JSON.SET <key> <path> <json>
 // 			 [NX | XX]
 //
-func (r *Redigo) JSONSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (
-	res interface{}, err error) {
+func (r *Redigo) JSONSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (res interface{}, err error) {
 
 	if len(opts) > 1 {
 		return nil, rjs.ErrTooManyOptionals
@@ -230,8 +229,7 @@ func (r *Redigo) JSONArrPop(key, path string, index int) (res interface{}, err e
 // ReJSON syntax:
 // 	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 //
-func (r *Redigo) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (
-	res interface{}, err error) {
+func (r *Redigo) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) { // nolint: lll
 
 	args := []interface{}{key, path, jsonValue}
 
@@ -331,7 +329,7 @@ func (r *Redigo) JSONObjLen(key, path string) (res interface{}, err error) {
 //		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
 //		JSON.DEBUG HELP					- reply with a helpful message
 //
-func (r *Redigo) JSONDebug(subcommand, key, path string) (res interface{}, err error) {
+func (r *Redigo) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (res interface{}, err error) {
 
 	if subcommand != rjs.DebugMemorySubcommand && subcommand != rjs.DebugHelpSubcommand {
 		err = fmt.Errorf("unknown subcommand - try `JSON.DEBUG HELP`")

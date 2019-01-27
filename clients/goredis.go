@@ -19,8 +19,7 @@ type GoRedis struct {
 // 	JSON.SET <key> <path> <json>
 // 			 [NX | XX]
 //
-func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (
-	res interface{}, err error) {
+func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (res interface{}, err error) { // nolint: lll
 
 	if len(opts) > 1 {
 		return nil, rjs.ErrTooManyOptionals
@@ -38,7 +37,6 @@ func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 	args = append([]interface{}{name}, args...)
 	res, err = r.Conn.Do(args...).Result()
 
-	// Todo: Check the GoRedis nil Error, returned in a certain specific case, which is not returned in Redigo
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
 		err = nil
 	}
@@ -146,7 +144,6 @@ func (r *GoRedis) JSONType(key, path string) (res interface{}, err error) {
 	args = append([]interface{}{name}, args...)
 	res, err = r.Conn.Do(args...).Result()
 
-	// Todo: Check the GoRedis nil Error, returned in a certain specific case, which is not returned in Redigo
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
 		err = nil
 	}
@@ -284,8 +281,7 @@ func (r *GoRedis) JSONArrPop(key, path string, index int) (res interface{}, err 
 // ReJSON syntax:
 // 	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 //
-func (r *GoRedis) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (
-	res interface{}, err error) {
+func (r *GoRedis) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) { // nolint: lll
 
 	args := []interface{}{key, path, jsonValue}
 
@@ -390,13 +386,13 @@ func (r *GoRedis) JSONObjLen(key, path string) (res interface{}, err error) {
 //		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
 //		JSON.DEBUG HELP					- reply with a helpful message
 //
-func (r *GoRedis) JSONDebug(subcommand, key, path string) (res interface{}, err error) {
+func (r *GoRedis) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (res interface{}, err error) {
 
 	if subcommand != rjs.DebugMemorySubcommand && subcommand != rjs.DebugHelpSubcommand {
 		err = fmt.Errorf("unknown subcommand - try `JSON.DEBUG HELP`")
 		return
 	}
-	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandDEBUG, subcommand, key, path)
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandDEBUG, string(subcommand), key, path)
 	if err != nil {
 		return nil, err
 	}
