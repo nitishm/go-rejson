@@ -54,6 +54,8 @@ type ReJSON interface {
 	JSONForget(key, path string) (res interface{}, err error)
 
 	JSONResp(key, path string) (res interface{}, err error)
+	
+	JSONUSet(key, path string, obj interface{}, opts ...rjs.SetOption) (res interface{}, err error)
 }
 
 // JSONSet used to set a json object
@@ -70,6 +72,22 @@ func (r *Handler) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 	}
 	return r.implementation.JSONSet(key, path, obj, opts...)
 }
+
+// JSONUSet used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json>
+// 			 [NX | XX]
+//
+func (r *Handler) JSONUSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (
+	res interface{}, err error) {
+
+	if r.clientName == rjs.ClientInactive {
+		return nil, rjs.ErrNoClientSet
+	}
+	return r.implementation.JSONUSet(key, path, obj, opts...)
+}
+
 
 // JSONGet used to get a json object
 //
