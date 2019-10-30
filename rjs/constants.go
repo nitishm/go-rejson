@@ -50,6 +50,7 @@ const (
 	ReJSONCommandDEBUG     ReJSONCommandID = 17
 	ReJSONCommandFORGET    ReJSONCommandID = 18
 	ReJSONCommandRESP      ReJSONCommandID = 19
+	ReJSONCommandUSET      ReJSONCommandID = 20
 
 	// JSONSET command Options
 	SetOptionNX SetOption = "NX"
@@ -86,6 +87,7 @@ var commandName = map[ReJSONCommandID]string{
 	ReJSONCommandDEBUG:     "JSON.DEBUG",
 	ReJSONCommandFORGET:    "JSON.FORGET",
 	ReJSONCommandRESP:      "JSON.RESP",
+	ReJSONCommandUSET:      "JSON.SET",
 }
 
 // commandMux maps command id to their Command Builder functions
@@ -110,4 +112,5 @@ var commandMux = map[ReJSONCommandID]CommandBuilderFunc{
 	ReJSONCommandDEBUG:     commandJSONDebug,
 	ReJSONCommandFORGET:    commandJSONGeneric,
 	ReJSONCommandRESP:      commandJSONGeneric,
+	ReJSONCommandUSET:      commandJSONUSet,
 }
