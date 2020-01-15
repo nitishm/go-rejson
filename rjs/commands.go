@@ -43,6 +43,15 @@ func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONQGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	params := argsIn[1]
+	argsOut = append(argsOut, key)
+	argsOut = append(argsOut, params)
+
+	return
+}
+
 func commandJSONGeneric(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]

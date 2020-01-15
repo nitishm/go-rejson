@@ -2,9 +2,10 @@ package clients
 
 import (
 	"fmt"
+	"strings"
+
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/rjs"
-	"strings"
 )
 
 // Redigo implements ReJSON interface for GoModule/Redigo Redis client
@@ -60,6 +61,30 @@ func (r *Redigo) JSONGet(key, path string, opts ...rjs.GetOption) (res interface
 	}
 
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandGET, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Conn.Do(name, args...)
+}
+
+//JSONQGet -
+func (r *Redigo) JSONQGet(key string, params ...string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0)
+	arrParam := make([]string, 0)
+	args = append(args, key)
+
+	strParam := `'`
+	for _, param := range params {
+		arrParam = append(arrParam, param)
+	}
+	strParam += strings.Join(arrParam, " ")
+	strParam += `'`
+
+	args = append(args, strParam)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandQGET, args...)
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,8 @@ type ReJSON interface {
 
 	JSONGet(key, path string, opts ...rjs.GetOption) (res interface{}, err error)
 
+	JSONQGet(key string, params ...string) (res interface{}, err error)
+
 	JSONMGet(path string, keys ...string) (res interface{}, err error)
 
 	JSONDel(key, path string) (res interface{}, err error)
@@ -86,6 +88,14 @@ func (r *Handler) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 		return nil, rjs.ErrNoClientSet
 	}
 	return r.implementation.JSONGet(key, path, opts...)
+}
+
+//JSONQGet -
+func (r *Handler) JSONQGet(key string, params ...string) (res interface{}, err error) {
+	if r.clientName == rjs.ClientInactive {
+		return nil, rjs.ErrNoClientSet
+	}
+	return r.implementation.JSONQGet(key, params...)
 }
 
 // JSONMGet used to get path values from multiple keys

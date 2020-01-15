@@ -2,9 +2,10 @@ package clients
 
 import (
 	"fmt"
+	"strings"
+
 	goredis "github.com/go-redis/redis"
 	"github.com/nitishm/go-rejson/rjs"
-	"strings"
 )
 
 // GoRedis implements ReJSON interface for Go-Redis/Redis Redis client
@@ -75,6 +76,38 @@ func (r *GoRedis) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 	if err != nil {
 		return
 	}
+	return rjs.StringToBytes(res), err
+}
+
+//JSONQGet -
+func (r *GoRedis) JSONQGet(key string, params ...string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0)
+	arrParam := make([]string, 0)
+	args = append(args, key)
+
+	strParam := `'`
+	for _, param := range params {
+		arrParam = append(arrParam, param)
+	}
+	strParam += strings.Join(arrParam, " ")
+	strParam += `'`
+
+	args = append(args, strParam)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandQGET, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	args = append([]interface{}{name}, args...)
+
+	res, err = r.Conn.Do(args...).Result()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
 	return rjs.StringToBytes(res), err
 }
 
