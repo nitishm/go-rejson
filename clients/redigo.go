@@ -48,7 +48,7 @@ func (r *Redigo) JSONSetWithIndex(key string, path string, obj interface{}, inde
 	args := make([]interface{}, 0, 6)
 	args = append(args, key, path, obj, "INDEX "+index)
 
-	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSET, args...)
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSETINDEX, args...)
 	if err != nil {
 		return nil, err
 	}

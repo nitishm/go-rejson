@@ -52,14 +52,18 @@ func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 func (r *GoRedis) JSONSetWithIndex(key string, path string, obj interface{}, index string) (res interface{}, err error) { // nolint: lll
 
 	args := make([]interface{}, 0, 6)
+
 	args = append(args, key, path, obj, "INDEX "+index)
 
-	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSET, args...)
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSETINDEX, args...)
 	if err != nil {
 		return nil, err
 	}
+
 	args = append([]interface{}{name}, args...)
+
 	fmt.Println(args)
+
 	res, err = r.Conn.Do(args...).Result()
 
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
@@ -83,7 +87,7 @@ func (r *GoRedis) JSONIndexAdd(index string, field string, path string) (res int
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	fmt.Println(args)
+
 	res, err = r.Conn.Do(args...).Result()
 
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {

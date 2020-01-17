@@ -34,6 +34,24 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONSetWithIndex(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	obj := argsIn[2]
+	index := argsIn[3]
+
+	argsOut = append(argsOut, key, path)
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+	argsOut = append(argsOut, b)
+	argsOut = append(argsOut, index)
+
+	return
+}
+
 func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
