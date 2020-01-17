@@ -48,7 +48,18 @@ func commandJSONQGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	params := argsIn[1]
 	argsOut = append(argsOut, key)
 	argsOut = append(argsOut, params)
+	return
+}
 
+func commandJSONIndexAdd(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	add := argsIn[0]
+	index := argsIn[1]
+	field := argsIn[2]
+	path := argsIn[3]
+	argsOut = append(argsOut, add)
+	argsOut = append(argsOut, index)
+	argsOut = append(argsOut, field)
+	argsOut = append(argsOut, path)
 	return
 }
 

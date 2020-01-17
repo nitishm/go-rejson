@@ -44,6 +44,54 @@ func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 	return
 }
 
+// JSONSetWithIndex used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json> <index>
+//
+func (r *GoRedis) JSONSetWithIndex(key string, path string, obj interface{}, index string) (res interface{}, err error) { // nolint: lll
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, key, path, obj, "INDEX "+index)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSET, args...)
+	if err != nil {
+		return nil, err
+	}
+	args = append([]interface{}{name}, args...)
+	fmt.Println(args)
+	res, err = r.Conn.Do(args...).Result()
+
+	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
+		err = nil
+	}
+	return
+}
+
+// JSONIndexAdd used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.INDEX ADD <index> <field> <path>
+//
+func (r *GoRedis) JSONIndexAdd(index string, field string, path string) (res interface{}, err error) { // nolint: lll
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, "ADD", index, field, `$`+path)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandINDEXADD, args...)
+	if err != nil {
+		return nil, err
+	}
+	args = append([]interface{}{name}, args...)
+	fmt.Println(args)
+	res, err = r.Conn.Do(args...).Result()
+
+	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
+		err = nil
+	}
+	return
+}
+
 // JSONGet used to get a json object
 //
 // ReJSON syntax:
@@ -79,7 +127,12 @@ func (r *GoRedis) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 	return rjs.StringToBytes(res), err
 }
 
-//JSONQGet -
+// JSONQGet used to get a json object
+//
+// ReJSON syntax:
+// 	JSON.QGET <index>
+//			[params ...]
+//Pass params like "@name:Tom"
 func (r *GoRedis) JSONQGet(key string, params ...string) (res interface{}, err error) {
 
 	args := make([]interface{}, 0)

@@ -17,9 +17,13 @@ func NewReJSONHandler() *Handler {
 type ReJSON interface {
 	JSONSet(key, path string, obj interface{}, opts ...rjs.SetOption) (res interface{}, err error)
 
+	JSONSetWithIndex(key, path string, obj interface{}, index string) (res interface{}, err error)
+
 	JSONGet(key, path string, opts ...rjs.GetOption) (res interface{}, err error)
 
 	JSONQGet(key string, params ...string) (res interface{}, err error)
+
+	JSONIndexAdd(key, field, path string) (res interface{}, err error)
 
 	JSONMGet(path string, keys ...string) (res interface{}, err error)
 
@@ -73,6 +77,20 @@ func (r *Handler) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 	return r.implementation.JSONSet(key, path, obj, opts...)
 }
 
+// JSONSetWithIndex used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json> <index>
+//
+func (r *Handler) JSONSetWithIndex(key string, path string, obj interface{}, index string) (
+	res interface{}, err error) {
+
+	if r.clientName == rjs.ClientInactive {
+		return nil, rjs.ErrNoClientSet
+	}
+	return r.implementation.JSONSetWithIndex(key, path, obj, index)
+}
+
 // JSONGet used to get a json object
 //
 // ReJSON syntax:
@@ -90,12 +108,29 @@ func (r *Handler) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 	return r.implementation.JSONGet(key, path, opts...)
 }
 
-//JSONQGet -
+// JSONQGet used to get a json object
+//
+// ReJSON syntax:
+// 	JSON.QGET <index>
+//			[params ...]
+//Pass params like "@name:Tom"
 func (r *Handler) JSONQGet(key string, params ...string) (res interface{}, err error) {
 	if r.clientName == rjs.ClientInactive {
 		return nil, rjs.ErrNoClientSet
 	}
 	return r.implementation.JSONQGet(key, params...)
+}
+
+// JSONAddIndex used to get a json object
+//
+// ReJSON syntax:
+// 	JSON.INDEX ADD <index> <field> <path>
+//
+func (r *Handler) JSONIndexAdd(index, field, path string) (res interface{}, err error) {
+	if r.clientName == rjs.ClientInactive {
+		return nil, rjs.ErrNoClientSet
+	}
+	return r.implementation.JSONIndexAdd(index, field, path)
 }
 
 // JSONMGet used to get path values from multiple keys

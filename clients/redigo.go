@@ -38,6 +38,40 @@ func (r *Redigo) JSONSet(key string, path string, obj interface{}, opts ...rjs.S
 	return r.Conn.Do(name, args...)
 }
 
+// JSONSetWithIndex used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json> <index>
+//
+func (r *Redigo) JSONSetWithIndex(key string, path string, obj interface{}, index string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, key, path, obj, "INDEX "+index)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSET, args...)
+	if err != nil {
+		return nil, err
+	}
+	return r.Conn.Do(name, args...)
+}
+
+// JSONIndexAdd used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.INDEX ADD <key> <field> <path>
+//
+func (r *Redigo) JSONIndexAdd(index string, field string, path string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, "ADD", index, field, `$`+path)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandINDEXADD, args...)
+	if err != nil {
+		return nil, err
+	}
+	return r.Conn.Do(name, args...)
+}
+
 // JSONGet used to get a json object
 //
 // ReJSON syntax:
@@ -68,7 +102,13 @@ func (r *Redigo) JSONGet(key, path string, opts ...rjs.GetOption) (res interface
 	return r.Conn.Do(name, args...)
 }
 
-//JSONQGet -
+// JSONQGet used to get a json object
+//
+// ReJSON syntax:
+// 	JSON.QGET <index>
+//			[params ...]
+//
+//Pass params like "@name:Tom"
 func (r *Redigo) JSONQGet(key string, params ...string) (res interface{}, err error) {
 
 	args := make([]interface{}, 0)
