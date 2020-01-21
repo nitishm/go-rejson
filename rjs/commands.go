@@ -34,11 +34,49 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONSetWithIndex(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	obj := argsIn[2]
+	index := argsIn[3]
+
+	argsOut = append(argsOut, key, path)
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+	argsOut = append(argsOut, b)
+	argsOut = append(argsOut, index)
+
+	return
+}
+
 func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
 	argsOut = append(argsOut, key)
 	argsOut = append(argsOut, argsIn[2:]...)
+	argsOut = append(argsOut, path)
+	return
+}
+
+func commandJSONQGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	params := argsIn[1]
+	argsOut = append(argsOut, key)
+	argsOut = append(argsOut, params)
+	return
+}
+
+func commandJSONIndexAdd(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	add := argsIn[0]
+	index := argsIn[1]
+	field := argsIn[2]
+	path := argsIn[3]
+	argsOut = append(argsOut, add)
+	argsOut = append(argsOut, index)
+	argsOut = append(argsOut, field)
 	argsOut = append(argsOut, path)
 	return
 }

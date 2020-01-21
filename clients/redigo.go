@@ -2,9 +2,10 @@ package clients
 
 import (
 	"fmt"
+	"strings"
+
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/rjs"
-	"strings"
 )
 
 // Redigo implements ReJSON interface for GoModule/Redigo Redis client
@@ -37,6 +38,40 @@ func (r *Redigo) JSONSet(key string, path string, obj interface{}, opts ...rjs.S
 	return r.Conn.Do(name, args...)
 }
 
+// JSONSetWithIndex used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json> <index>
+//
+func (r *Redigo) JSONSetWithIndex(key string, path string, obj interface{}, index string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, key, path, obj, "INDEX "+index)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSETINDEX, args...)
+	if err != nil {
+		return nil, err
+	}
+	return r.Conn.Do(name, args...)
+}
+
+// JSONIndexAdd used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.INDEX ADD <key> <field> <path>
+//
+func (r *Redigo) JSONIndexAdd(index string, field string, path string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, "ADD", index, field, `$`+path)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandINDEXADD, args...)
+	if err != nil {
+		return nil, err
+	}
+	return r.Conn.Do(name, args...)
+}
+
 // JSONGet used to get a json object
 //
 // ReJSON syntax:
@@ -60,6 +95,36 @@ func (r *Redigo) JSONGet(key, path string, opts ...rjs.GetOption) (res interface
 	}
 
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandGET, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Conn.Do(name, args...)
+}
+
+// JSONQGet used to get a json object
+//
+// ReJSON syntax:
+// 	JSON.QGET <index>
+//			[params ...]
+//
+//Pass params like "@name:Tom"
+func (r *Redigo) JSONQGet(key string, params ...string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0)
+	arrParam := make([]string, 0)
+	args = append(args, key)
+
+	strParam := `'`
+	for _, param := range params {
+		arrParam = append(arrParam, param)
+	}
+	strParam += strings.Join(arrParam, " ")
+	strParam += `'`
+
+	args = append(args, strParam)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandQGET, args...)
 	if err != nil {
 		return nil, err
 	}

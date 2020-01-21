@@ -2,9 +2,10 @@ package clients
 
 import (
 	"fmt"
+	"strings"
+
 	goredis "github.com/go-redis/redis"
 	"github.com/nitishm/go-rejson/rjs"
-	"strings"
 )
 
 // GoRedis implements ReJSON interface for Go-Redis/Redis Redis client
@@ -35,6 +36,58 @@ func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
+	res, err = r.Conn.Do(args...).Result()
+
+	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
+		err = nil
+	}
+	return
+}
+
+// JSONSetWithIndex used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.SET <key> <path> <json> <index>
+//
+func (r *GoRedis) JSONSetWithIndex(key string, path string, obj interface{}, index string) (res interface{}, err error) { // nolint: lll
+
+	args := make([]interface{}, 0, 6)
+
+	args = append(args, key, path, obj, "INDEX "+index)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSETINDEX, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	args = append([]interface{}{name}, args...)
+
+	fmt.Println(args)
+
+	res, err = r.Conn.Do(args...).Result()
+
+	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
+		err = nil
+	}
+	return
+}
+
+// JSONIndexAdd used to set a json object
+//
+// ReJSON syntax:
+// 	JSON.INDEX ADD <index> <field> <path>
+//
+func (r *GoRedis) JSONIndexAdd(index string, field string, path string) (res interface{}, err error) { // nolint: lll
+
+	args := make([]interface{}, 0, 6)
+	args = append(args, "ADD", index, field, `$`+path)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandINDEXADD, args...)
+	if err != nil {
+		return nil, err
+	}
+	args = append([]interface{}{name}, args...)
+
 	res, err = r.Conn.Do(args...).Result()
 
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
@@ -75,6 +128,43 @@ func (r *GoRedis) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 	if err != nil {
 		return
 	}
+	return rjs.StringToBytes(res), err
+}
+
+// JSONQGet used to get a json object
+//
+// ReJSON syntax:
+// 	JSON.QGET <index>
+//			[params ...]
+//Pass params like "@name:Tom"
+func (r *GoRedis) JSONQGet(key string, params ...string) (res interface{}, err error) {
+
+	args := make([]interface{}, 0)
+	arrParam := make([]string, 0)
+	args = append(args, key)
+
+	strParam := `'`
+	for _, param := range params {
+		arrParam = append(arrParam, param)
+	}
+	strParam += strings.Join(arrParam, " ")
+	strParam += `'`
+
+	args = append(args, strParam)
+
+	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandQGET, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	args = append([]interface{}{name}, args...)
+
+	res, err = r.Conn.Do(args...).Result()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
 	return rjs.StringToBytes(res), err
 }
 

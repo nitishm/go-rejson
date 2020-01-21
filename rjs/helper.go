@@ -33,7 +33,7 @@ func (r ReJSONCommandID) Value() int32 {
 
 // TypeSafety checks the validity of the command id
 func (r ReJSONCommandID) TypeSafety() error {
-	if r.Value() < 0 || r.Value() > 19 {
+	if r.Value() < 0 || r.Value() > 22 {
 		return fmt.Errorf("error: invalid command id")
 	}
 	return nil
