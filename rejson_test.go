@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	goredis "github.com/go-redis/redis"
+	goredis "github.com/go-redis/redis/v7"
 	redigo "github.com/gomodule/redigo/redis"
 )
 
