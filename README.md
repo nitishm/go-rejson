@@ -37,7 +37,7 @@ import (
 	"log"
 
 	"github.com/nitishm/go-rejson"
-	goredis "github.com/go-redis/redis"
+	goredis "github.com/go-redis/redis/v7"
 	"github.com/gomodule/redigo/redis"
 )
 

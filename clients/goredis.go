@@ -2,7 +2,7 @@ package clients
 
 import (
 	"fmt"
-	goredis "github.com/go-redis/redis"
+	goredis "github.com/go-redis/redis/v7"
 	"github.com/nitishm/go-rejson/rjs"
 	"strings"
 )
@@ -10,7 +10,7 @@ import (
 // GoRedis implements ReJSON interface for Go-Redis/Redis Redis client
 // Link: https://github.com/go-redis/redis
 type GoRedis struct {
-	Conn *goredis.Client // import goredis "github.com/go-redis/redis"
+	Conn *goredis.Client // import goredis "github.com/go-redis/redis/v7"
 }
 
 // JSONSet used to set a json object
