@@ -1,7 +1,7 @@
 package rejson
 
 import (
-	goredis "github.com/go-redis/redis/v7"
+	goredis "github.com/go-redis/redis/v8"
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/clients"
 	"github.com/nitishm/go-rejson/rjs"

@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/nitishm/go-rejson"
-	"github.com/nitishm/go-rejson/rjs"
 	"log"
 
-	goredis "github.com/go-redis/redis/v7"
+	"github.com/nitishm/go-rejson"
+	"github.com/nitishm/go-rejson/rjs"
+
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
 )
+
+var ctx = context.Background()
 
 func Example_JSONObj(rh *rejson.Handler) {
 
@@ -108,7 +112,7 @@ func main() {
 	// GoRedis Client
 	cli := goredis.NewClient(&goredis.Options{Addr: *addr})
 	defer func() {
-		if err := cli.FlushAll().Err(); err != nil {
+		if err := cli.FlushAll(ctx).Err(); err != nil {
 			log.Fatalf("goredis - failed to flush: %v", err)
 		}
 		if err := cli.Close(); err != nil {

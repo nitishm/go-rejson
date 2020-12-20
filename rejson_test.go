@@ -1,14 +1,18 @@
 package rejson
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/nitishm/go-rejson/rjs"
 	"reflect"
 	"testing"
 
-	goredis "github.com/go-redis/redis/v7"
+	"github.com/nitishm/go-rejson/rjs"
+
+	goredis "github.com/go-redis/redis/v8"
 	redigo "github.com/gomodule/redigo/redis"
 )
+
+var ctx = context.Background()
 
 func TestUnsupportedCommand(t *testing.T) {
 	_, _, err := rjs.CommandBuilder(1234, nil)
@@ -77,7 +81,7 @@ func TestReJSON(t *testing.T) {
 			}
 		}},
 		{cli: goredisCli, name: "GoRedis ", closeFunc: func() {
-			if err := goredisCli.FlushAll().Err(); err != nil {
+			if err := goredisCli.FlushAll(ctx).Err(); err != nil {
 				t.Fatalf("goredis - failed to flush: %v", err)
 			}
 			if err := goredisCli.Close(); err != nil {
