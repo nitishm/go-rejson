@@ -3,7 +3,7 @@ package clients
 import (
 	"fmt"
 	redigo "github.com/gomodule/redigo/redis"
-	"github.com/nitishm/go-rejson/rjs"
+	"github.com/nitishm/go-rejson/v4/rjs"
 	"strings"
 )
 

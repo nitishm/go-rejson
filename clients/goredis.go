@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	goredis "github.com/go-redis/redis/v8"
-	"github.com/nitishm/go-rejson/rjs"
+	"github.com/nitishm/go-rejson/v4/rjs"
 )
 
 // GoRedis implements ReJSON interface for Go-Redis/Redis Redis client

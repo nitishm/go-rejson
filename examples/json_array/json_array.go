@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nitishm/go-rejson/rjs"
+	"github.com/nitishm/go-rejson/v4/rjs"
 
 	goredis "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
-	"github.com/nitishm/go-rejson"
+	"github.com/nitishm/go-rejson/v4"
 )
 
 var ctx = context.Background()

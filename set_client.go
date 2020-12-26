@@ -4,8 +4,8 @@ import (
 	"context"
 	goredis "github.com/go-redis/redis/v8"
 	redigo "github.com/gomodule/redigo/redis"
-	"github.com/nitishm/go-rejson/clients"
-	"github.com/nitishm/go-rejson/rjs"
+	"github.com/nitishm/go-rejson/v4/clients"
+	"github.com/nitishm/go-rejson/v4/rjs"
 )
 
 // RedisClient provides interface for Client handling in the ReJSON Handler

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nitishm/go-rejson/rjs"
+	"github.com/nitishm/go-rejson/v4/rjs"
 
 	goredis "github.com/go-redis/redis/v8"
 	redigo "github.com/gomodule/redigo/redis"
