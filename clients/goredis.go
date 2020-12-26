@@ -9,12 +9,25 @@ import (
 	"github.com/nitishm/go-rejson/rjs"
 )
 
-var ctx = context.Background()
-
 // GoRedis implements ReJSON interface for Go-Redis/Redis Redis client
 // Link: https://github.com/go-redis/redis
 type GoRedis struct {
 	Conn *goredis.Client // import goredis "github.com/go-redis/redis/v8"
+
+	// ctx defines context for the provided connection
+	ctx context.Context
+}
+
+// NewGoRedisClient returns a new GoRedis ReJSON client with the provided context
+// and connection, if ctx is nil default context.Background will be used
+func NewGoRedisClient(ctx context.Context, conn *goredis.Client) *GoRedis {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return &GoRedis{
+		ctx:  ctx,
+		Conn: conn,
+	}
 }
 
 // JSONSet used to set a json object
@@ -39,7 +52,7 @@ func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
 		err = nil
@@ -75,7 +88,7 @@ func (r *GoRedis) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 	}
 
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -103,7 +116,7 @@ func (r *GoRedis) JSONMGet(path string, keys ...string) (res interface{}, err er
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -131,7 +144,7 @@ func (r *GoRedis) JSONDel(key string, path string) (res interface{}, err error) 
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONType to get the type of key or member at path.
@@ -146,7 +159,7 @@ func (r *GoRedis) JSONType(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 
 	if err != nil && err.Error() == rjs.ErrGoRedisNil.Error() {
 		err = nil
@@ -166,7 +179,7 @@ func (r *GoRedis) JSONNumIncrBy(key, path string, number int) (res interface{}, 
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -185,7 +198,7 @@ func (r *GoRedis) JSONNumMultBy(key, path string, number int) (res interface{}, 
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -204,7 +217,7 @@ func (r *GoRedis) JSONStrAppend(key, path, jsonstring string) (res interface{}, 
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONStrLen to return the length of a string member
@@ -219,7 +232,7 @@ func (r *GoRedis) JSONStrLen(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONArrAppend to append json value into array at path
@@ -241,7 +254,7 @@ func (r *GoRedis) JSONArrAppend(key, path string, values ...interface{}) (res in
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONArrLen returns the length of the json array at path
@@ -256,7 +269,7 @@ func (r *GoRedis) JSONArrLen(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONArrPop removes and returns element from the index in the array
@@ -273,7 +286,7 @@ func (r *GoRedis) JSONArrPop(key, path string, index int) (res interface{}, err 
 	}
 	args = append([]interface{}{name}, args...)
 
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -303,7 +316,7 @@ func (r *GoRedis) JSONArrIndex(key, path string, jsonValue interface{}, optional
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONArrTrim trims an array so that it contains only the specified inclusive range of elements
@@ -318,7 +331,7 @@ func (r *GoRedis) JSONArrTrim(key, path string, start, end int) (res interface{}
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONArrInsert inserts the json value(s) into the array at path before the index (shifts to the right).
@@ -340,7 +353,7 @@ func (r *GoRedis) JSONArrInsert(key, path string, index int, values ...interface
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONObjKeys returns the keys in the object that's referenced by path
@@ -355,7 +368,7 @@ func (r *GoRedis) JSONObjKeys(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -380,7 +393,7 @@ func (r *GoRedis) JSONObjLen(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONDebug reports information
@@ -401,7 +414,7 @@ func (r *GoRedis) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (r
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	res, err = r.Conn.Do(ctx, args...).Result()
+	res, err = r.Conn.Do(r.ctx, args...).Result()
 	if err != nil {
 		return
 	}
@@ -430,7 +443,7 @@ func (r *GoRedis) JSONForget(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }
 
 // JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
@@ -445,5 +458,5 @@ func (r *GoRedis) JSONResp(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 	args = append([]interface{}{name}, args...)
-	return r.Conn.Do(ctx, args...).Result()
+	return r.Conn.Do(r.ctx, args...).Result()
 }

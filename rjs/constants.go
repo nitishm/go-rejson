@@ -17,6 +17,12 @@ const (
 	// ClientInactive signifies that the client is inactive in Handler
 	ClientInactive = "inactive"
 
+	// ClientRedigo signifies that the current client is redigo
+	ClientRedigo = "redigo"
+
+	// ClientGoRedis signifies that the current client is go-redis
+	ClientGoRedis = "goredis"
+
 	// PopArrLast gives index of the last element for JSONArrPop
 	PopArrLast = -1
 
