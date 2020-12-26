@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 
-	goredis "github.com/go-redis/redis/v7"
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
 )
+
+var ctx = context.Background()
 
 // Name - student name
 type Name struct {
@@ -87,7 +90,7 @@ func main() {
 	// GoRedis Client
 	cli := goredis.NewClient(&goredis.Options{Addr: *addr})
 	defer func() {
-		if err := cli.FlushAll().Err(); err != nil {
+		if err := cli.FlushAll(ctx).Err(); err != nil {
 			log.Fatalf("goredis - failed to flush: %v", err)
 		}
 		if err := cli.Close(); err != nil {

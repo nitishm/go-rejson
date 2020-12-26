@@ -1,12 +1,14 @@
 package rejson
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/nitishm/go-rejson/rjs"
 	"reflect"
 	"testing"
 
-	goredis "github.com/go-redis/redis/v7"
+	"github.com/nitishm/go-rejson/rjs"
+
+	goredis "github.com/go-redis/redis/v8"
 	redigo "github.com/gomodule/redigo/redis"
 )
 
@@ -19,15 +21,53 @@ func TestUnsupportedCommand(t *testing.T) {
 }
 
 type TestClient struct {
+	*testing.T
 	name string
 	conn interface{}
 	rh   *Handler
 }
 
-func (t *TestClient) init() {
+type helper struct {
+	cli       interface{}
+	name      string
+	closeFunc func()
+}
+
+func (t *TestClient) init() []helper {
 	t.name = "-"
 	t.conn = "inactive"
 	t.rh = NewReJSONHandler()
+
+	// Redigo Test Client
+	redigoCli, err := redigo.Dial("tcp", ":6379")
+	if err != nil {
+		t.Fatalf("redigo - could not connect to redigo: %v", err)
+		return nil
+	}
+
+	// GoRedis Test Client
+	goredisCli := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
+
+	return []helper{
+		{cli: redigoCli, name: "Redigo ", closeFunc: func() {
+			_, err = redigoCli.Do("FLUSHALL")
+			if err != nil {
+				t.Fatalf("redigo - failed to flush: %v", err)
+			}
+			err = redigoCli.Close()
+			if err != nil {
+				t.Fatalf("redigo - failed to close: %v", err)
+			}
+		}},
+		{cli: goredisCli, name: "GoRedis ", closeFunc: func() {
+			if err := goredisCli.FlushAll(context.Background()).Err(); err != nil {
+				t.Fatalf("goredis - failed to flush: %v", err)
+			}
+			if err := goredisCli.Close(); err != nil {
+				t.Fatalf("goredis - failed to communicate to redis-server: %v", err)
+			}
+		}},
+	}
 }
 
 func (t *TestClient) SetTestingClient(conn interface{}) {
@@ -48,45 +88,9 @@ func (t *TestClient) SetTestingClient(conn interface{}) {
 }
 
 func TestReJSON(t *testing.T) {
-	test := TestClient{}
-	test.init()
-
-	// Redigo Test Client
-	redigoCli, err := redigo.Dial("tcp", ":6379")
-	if err != nil {
-		t.Fatalf("redigo - could not connect to redigo: %v", err)
-		return
-	}
-
-	// GoRedis Test Client
-	goredisCli := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
-
-	clientsObj := []struct {
-		cli       interface{}
-		name      string
-		closeFunc func()
-	}{
-		{cli: redigoCli, name: "Redigo ", closeFunc: func() {
-			_, err = redigoCli.Do("FLUSHALL")
-			if err != nil {
-				t.Fatalf("redigo - failed to flush: %v", err)
-			}
-			err = redigoCli.Close()
-			if err != nil {
-				t.Fatalf("redigo - failed to close: %v", err)
-			}
-		}},
-		{cli: goredisCli, name: "GoRedis ", closeFunc: func() {
-			if err := goredisCli.FlushAll().Err(); err != nil {
-				t.Fatalf("goredis - failed to flush: %v", err)
-			}
-			if err := goredisCli.Close(); err != nil {
-				t.Fatalf("goredis - failed to communicate to redis-server: %v", err)
-			}
-		}},
-	}
-
-	for _, obj := range clientsObj {
+	test := TestClient{T: t}
+	list := test.init()
+	for _, obj := range list {
 		t.Run(obj.name+"TestJSONSet", func(t *testing.T) {
 			test.SetTestingClient(obj.cli)
 			testJSONSet(test.rh, t)
@@ -170,6 +174,75 @@ func TestReJSON(t *testing.T) {
 		obj.closeFunc()
 	}
 
+}
+
+func TestReJSONWithContext(t *testing.T) {
+	ctx := context.Background()
+	ctxCn, cancel := context.WithCancel(ctx)
+	cancel()
+
+	testObj := TestObject{
+		Name:   "itemName",
+		Number: 1,
+	}
+	res := []byte("{\"name\":\"itemName\",\"number\":1}")
+
+	test := TestClient{T: t}
+	list := test.init()
+	for _, obj := range list {
+		test.SetTestingClient(obj.cli)
+		rh := test.rh
+
+		// check with canceled context
+		ok, err := rh.SetContext(ctxCn).JSONSet("testObj#1", ".", testObj)
+		if rh.clientName == rjs.ClientGoRedis {
+			if err == nil || ok == "OK" {
+				t.Errorf("JSONSet() got = %v %v, want nil, error: context.Canceled", ok, err)
+			}
+			got, err := rh.JSONGet("testObj#1", ".")
+			if err == nil || reflect.DeepEqual(got, res) {
+				t.Errorf("JSONGet() got = %v %v, want: no key found error", got, err)
+			}
+		} else {
+			if err != nil || ok != "OK" {
+				t.Errorf("JSONSet() got = %v %v, want OK, nil", ok, err)
+			}
+			got, err := rh.JSONGet("testObj#1", ".")
+			if err != nil || !reflect.DeepEqual(got, res) {
+				t.Errorf("JSONGet() got = %v %v, want: %v", got, err, res)
+			}
+		}
+
+		// check with normal context
+		ok, err = rh.SetContext(ctx).JSONSet("testObj#2", ".", testObj)
+		if err != nil || ok != "OK" {
+			t.Errorf("JSONSet() got = %v %v, want OK, nil", ok, err)
+		}
+		got, err := rh.JSONGet("testObj#2", ".")
+		if err != nil || !reflect.DeepEqual(got, res) {
+			t.Errorf("JSONGet() got = %v %v, want: %v", got, err, res)
+		}
+		got, err = rh.SetContext(ctx).JSONGet("testObj#2", ".")
+		if err != nil || !reflect.DeepEqual(got, res) {
+			t.Errorf("JSONGet() got = %v %v, want: %v", got, err, res)
+		}
+
+		// check without context
+		ok, err = rh.JSONSet("testObj#3", ".", testObj)
+		if err != nil || ok != "OK" {
+			t.Errorf("JSONSet() got = %v %v, want OK, nil", ok, err)
+		}
+		got, err = rh.JSONGet("testObj#3", ".")
+		if err != nil || !reflect.DeepEqual(got, res) {
+			t.Errorf("JSONGet() got = %v %v, want: %v", got, err, res)
+		}
+		got, err = rh.SetContext(ctx).JSONGet("testObj#3", ".")
+		if err != nil || !reflect.DeepEqual(got, res) {
+			t.Errorf("JSONGet() got = %v %v, want: %v", got, err, res)
+		}
+
+		obj.closeFunc()
+	}
 }
 
 type TestObject struct {

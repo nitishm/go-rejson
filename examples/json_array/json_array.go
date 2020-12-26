@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/nitishm/go-rejson/rjs"
 	"log"
 
-	goredis "github.com/go-redis/redis/v7"
+	"github.com/nitishm/go-rejson/rjs"
+
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
 )
+
+var ctx = context.Background()
 
 func Example_JSONArray(rh *rejson.Handler) {
 	ArrIn := []string{"one", "two", "three", "four", "five"}
@@ -158,7 +162,7 @@ func main() {
 	// GoRedis Client
 	cli := goredis.NewClient(&goredis.Options{Addr: *addr})
 	defer func() {
-		if err := cli.FlushAll().Err(); err != nil {
+		if err := cli.FlushAll(ctx).Err(); err != nil {
 			log.Fatalf("goredis - failed to flush: %v", err)
 		}
 		if err := cli.Close(); err != nil {

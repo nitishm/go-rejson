@@ -1,7 +1,8 @@
 package rejson
 
 import (
-	goredis "github.com/go-redis/redis/v7"
+	"context"
+	goredis "github.com/go-redis/redis/v8"
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/clients"
 	"github.com/nitishm/go-rejson/rjs"
@@ -29,8 +30,14 @@ func (r *Handler) SetRedigoClient(conn redigo.Conn) {
 }
 
 // SetGoRedisClient sets Go-Redis (https://github.com/go-redis/redis) client to
-// the handler
+// the handler. It is left for backward compatibility.
 func (r *Handler) SetGoRedisClient(conn *goredis.Client) {
+	r.SetGoRedisClientWithContext(nil, conn)
+}
+
+// SetGoRedisClientWithContext sets Go-Redis (https://github.com/go-redis/redis) client to
+// the handler with a global context for the connection
+func (r *Handler) SetGoRedisClientWithContext(ctx context.Context, conn *goredis.Client) {
 	r.clientName = "goredis"
-	r.implementation = &clients.GoRedis{Conn: conn}
+	r.implementation = clients.NewGoRedisClient(ctx, conn)
 }
