@@ -75,7 +75,7 @@ func (r *Redigo) JSONGet(key, path string, opts ...rjs.GetOption) (res interface
 func (r *Redigo) JSONMGet(path string, keys ...string) (res interface{}, err error) {
 
 	if len(keys) == 0 {
-		return nil, rjs.ErrNeedAtleastOneArg
+		return nil, rjs.ErrNeedAtLeastOneArg
 	}
 	args := make([]interface{}, 0)
 	for _, key := range keys {
@@ -182,7 +182,7 @@ func (r *Redigo) JSONStrLen(key, path string) (res interface{}, err error) {
 func (r *Redigo) JSONArrAppend(key, path string, values ...interface{}) (res interface{}, err error) {
 
 	if len(values) == 0 {
-		return nil, rjs.ErrNeedAtleastOneArg
+		return nil, rjs.ErrNeedAtLeastOneArg
 	}
 	args := make([]interface{}, 0)
 	args = append(args, key, path)
@@ -271,7 +271,7 @@ func (r *Redigo) JSONArrTrim(key, path string, start, end int) (res interface{},
 func (r *Redigo) JSONArrInsert(key, path string, index int, values ...interface{}) (res interface{}, err error) {
 
 	if len(values) == 0 {
-		return nil, rjs.ErrNeedAtleastOneArg
+		return nil, rjs.ErrNeedAtLeastOneArg
 	}
 	args := make([]interface{}, 0)
 	args = append(args, key, path, index)

@@ -16,7 +16,6 @@ func TestUnsupportedCommand(t *testing.T) {
 	_, _, err := rjs.CommandBuilder(1234, nil)
 	if err == nil {
 		t.Errorf("TestUnsupportedCommand() returned nil error")
-		return
 	}
 }
 
