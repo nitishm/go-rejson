@@ -32,7 +32,7 @@ func (r *Handler) SetRedigoClient(conn redigo.Conn) {
 // SetGoRedisClient sets Go-Redis (https://github.com/go-redis/redis) client to
 // the handler. It is left for backward compatibility.
 func (r *Handler) SetGoRedisClient(conn *goredis.Client) {
-	r.SetGoRedisClientWithContext(nil, conn)
+	r.SetGoRedisClientWithContext(context.TODO(), conn)
 }
 
 // SetGoRedisClientWithContext sets Go-Redis (https://github.com/go-redis/redis) client to

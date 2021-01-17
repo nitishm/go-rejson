@@ -7,7 +7,7 @@ var (
 	ErrInternal          = fmt.Errorf("error: internal client error")
 	ErrNoClientSet       = fmt.Errorf("no redis client is set")
 	ErrTooManyOptionals  = fmt.Errorf("error: too many optional arguments")
-	ErrNeedAtleastOneArg = fmt.Errorf("error: need atleast one argument in varing field")
+	ErrNeedAtLeastOneArg = fmt.Errorf("error: need atleast one argument in varying field")
 
 	// GoRedis specific Nil error
 	ErrGoRedisNil = fmt.Errorf("redis: nil")

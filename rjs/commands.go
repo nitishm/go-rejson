@@ -175,7 +175,6 @@ func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) 
 func CommandBuilder(commandNameIn ReJSONCommandID, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) { // nolint: lll
 
 	cmd, commandNameOut, err := commandNameIn.Details()
-
 	if err != nil {
 		return
 	}
