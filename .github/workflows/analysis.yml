@@ -1,5 +1,5 @@
 name: code-analysis
-on: [push, pull_request]
+on: [push]
 
 jobs:
   golangci:
@@ -10,12 +10,11 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.35
-          skip-go-installation: true
 
   staticcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v2
       - name: check
         uses: grandcolline/golang-github-actions@v1.1.0
         with:

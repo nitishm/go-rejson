@@ -2,7 +2,7 @@
 
 Go-ReJSON is a [Go](https://golang.org/) client for [ReJSON](https://github.com/RedisLabsModules/rejson) Redis Module.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/nitishm/go-rejson.svg)](https://pkg.go.dev/github.com/nitishm/go-rejson)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nitishm/go-rejson.svg)](https://pkg.go.dev/github.com/nitishm/go-rejson/v4)
 [![Build Status](https://travis-ci.org/nitishm/go-rejson.svg?branch=master)](https://travis-ci.org/nitishm/go-rejson)
 [![codecov](https://coveralls.io/repos/github/nitishm/go-rejson/badge.svg?branch=master)](https://coveralls.io/github/nitishm/go-rejson?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nitishm/go-rejson)](https://goreportcard.com/report/github.com/nitishm/go-rejson)

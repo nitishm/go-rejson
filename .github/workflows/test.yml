@@ -1,5 +1,5 @@
 name: test
-on: [push, pull_request]
+on: [push]
 
 jobs:
   test:
@@ -20,12 +20,12 @@ jobs:
           - 6379:6379
 
     steps:
+      - uses: actions/checkout@v2
       - name: set up go ${{ matrix.go_version }}
-        uses: actions/setup-go@v2.1.2
+        uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go_version }}
         id: go
-      - uses: actions/checkout@v2
       - name: go test
         run: |
           go test -race -v -covermode=atomic -coverprofile=profile.cov ./...
