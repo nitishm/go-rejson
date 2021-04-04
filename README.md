@@ -121,7 +121,7 @@ func main() {
 	// GoRedis Client
 	cli := goredis.NewClient(&goredis.Options{Addr: *addr})
 	defer func() {
-		if err := cli.FlushAll().Err(); err != nil {
+		if err := cli.FlushAll(context.Background()).Err(); err != nil {
 			log.Fatalf("goredis - failed to flush: %v", err)
 		}
 		if err := cli.Close(); err != nil {
