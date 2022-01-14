@@ -1,5 +1,5 @@
 name: test
-on: [push]
+on: [push, pull_request]
 
 jobs:
   test:
@@ -10,7 +10,7 @@ jobs:
 
     services:
       redis-rejson:
-        image: redislabs/rejson
+        image: redislabs/rejson:1.0.8
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
