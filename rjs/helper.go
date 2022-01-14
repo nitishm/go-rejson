@@ -20,9 +20,7 @@ func StringToBytes(lst interface{}) (by []byte) {
 	if !ok {
 		panic("error: something went wrong")
 	}
-	for _, s := range _lst {
-		by = append(by, byte(s))
-	}
+	by = []byte(_lst)
 	return
 }
 
