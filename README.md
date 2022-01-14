@@ -1,3 +1,5 @@
+> _Note: Currently, go-ReJSON only support redislabs/rejson with version <=1.0.8. If you are using higher versions, some commands might not work as expected_
+
 # Go-ReJSON - a golang client for ReJSON (a JSON data type for Redis)
 
 Go-ReJSON is a [Go](https://golang.org/) client for [ReJSON](https://github.com/RedisLabsModules/rejson) Redis Module.
@@ -20,10 +22,13 @@ Primary features of ReJSON Module:
 
 Each and every feature of ReJSON Module is fully incorporated in the project.
 
-Enjoy ReJSON with the type-safe Redis client, [`Go-Redis/Redis`](https://github.com/go-redis/redis) or use the print-like Redis-api client [`GoModule/Redigo`](https://github.com/gomodule/redigo).
-Go-ReJSON supports both the clients. Use any of the above two client you want, Go-ReJSON helps you out with all its features and functionalities in a more generic and standard way.
+Enjoy ReJSON with the type-safe Redis client, [`Go-Redis/Redis`](https://github.com/go-redis/redis) or use the
+print-like Redis-api client [`GoModule/Redigo`](https://github.com/gomodule/redigo). Go-ReJSON supports both the
+clients. Use any of the above two client you want, Go-ReJSON helps you out with all its features and functionalities in
+a more generic and standard way.
 
-Support for `mediocregopher/radix` and other Redis clients is in our RoadMap. Any contributions on the support for other clients is hearty welcome.
+Support for `mediocregopher/radix` and other Redis clients is in our RoadMap. Any contributions to the support for other
+clients is hearty welcome.
 
 ## Installation
 
