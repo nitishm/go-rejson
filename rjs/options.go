@@ -38,6 +38,7 @@ func (g GetOption) Value() []interface{} {
 	return []interface{}{g.name, g.Arg}
 }
 
+// SetValue will set the values in the options
 func (g GetOption) SetValue(arg string) {
 	g.Arg = arg
 }
