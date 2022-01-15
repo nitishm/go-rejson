@@ -1874,7 +1874,7 @@ func testJSONObjKeys(rh *Handler, t *testing.T) {
 	}
 }
 
-func testJSONDebug(rh *Handler, t *testing.T) {
+func _testJSONDebug(rh *Handler, t *testing.T) {
 
 	_, err := rh.JSONSet("tstr", ".", "SimpleString")
 	if err != nil {
