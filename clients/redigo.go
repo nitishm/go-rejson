@@ -116,15 +116,15 @@ func (r *Redigo) JSONType(key, path string) (res interface{}, err error) {
 		return nil, err
 	}
 
-	res, command_err := r.Conn.Do(name, args...)
+	res, err = r.Conn.Do(name, args...)
 
 	if err != nil {
-		return nil, command_err
+		return nil, err
 	}
 	switch v := res.(type) {
 	case string:
 		return v, nil
-	case []uint8:
+	case []byte:
 		return string(v), nil
 	case nil:
 		return
