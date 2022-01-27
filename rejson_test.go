@@ -158,6 +158,10 @@ func TestReJSON(t *testing.T) {
 			test.SetTestingClient(obj.cli)
 			testJSONObjKeys(test.rh, t)
 		})
+		t.Run(obj.name+"TestJSONDebug", func(t *testing.T) {
+			test.SetTestingClient(obj.cli)
+			testJSONDebug(test.rh, t)
+		})
 		t.Run(obj.name+"TestJSONForget", func(t *testing.T) {
 			test.SetTestingClient(obj.cli)
 			testJSONForget(test.rh, t)
@@ -1865,6 +1869,71 @@ func testJSONObjKeys(rh *Handler, t *testing.T) {
 			}
 			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
 				t.Errorf("JSONObjKeys() = %v, want %v", gotRes, tt.wantRes)
+			}
+		})
+	}
+}
+
+func testJSONDebug(rh *Handler, t *testing.T) {
+	t.Skip("JSON.DEBUG apparently has some open bugs")
+	_, err := rh.JSONSet("tstr", ".", "SimpleString")
+	if err != nil {
+		t.Fatal("Failed to Set key ", err)
+		return
+	}
+	type args struct {
+		subCommand rjs.DebugSubCommand
+		key        string
+		path       string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes interface{}
+		wantErr bool
+	}{
+		{
+			name: "Debug Help",
+			args: args{
+				subCommand: rjs.DebugHelpSubcommand,
+				key:        "tstr",
+				path:       ".",
+			},
+			wantRes: rjs.DebugHelpOutput,
+			wantErr: false,
+		},
+		{
+			name: "Debug Memory",
+			args: args{
+				subCommand: rjs.DebugMemorySubcommand,
+				key:        "tstr",
+				path:       ".",
+			},
+			wantRes: int64(8),
+			wantErr: false,
+		},
+		{
+			name: rjs.ClientInactive,
+			args: args{
+				key:  "active",
+				path: ".",
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == rjs.ClientInactive {
+				rh.SetClientInactive()
+			}
+			gotRes, err := rh.JSONDebug(tt.args.subCommand, tt.args.key, tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JSONDebug() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil && !reflect.DeepEqual(gotRes, tt.wantRes) {
+				t.Errorf("JSONDebug() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
