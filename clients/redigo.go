@@ -115,7 +115,23 @@ func (r *Redigo) JSONType(key, path string) (res interface{}, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return r.Conn.Do(name, args...)
+
+	res, err = r.Conn.Do(name, args...)
+
+	if err != nil {
+		return nil, err
+	}
+	switch v := res.(type) {
+	case string:
+		return v, nil
+	case []byte:
+		return string(v), nil
+	case nil:
+		return
+	default:
+		err := fmt.Errorf("type returned not expected %T", v)
+		return nil, err
+	}
 }
 
 // JSONNumIncrBy used to increment a number by provided amount
