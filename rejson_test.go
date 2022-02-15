@@ -45,7 +45,9 @@ func (t *TestClient) init() []helper {
 	}
 
 	// GoRedis Test Client
-	goredisCli := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
+	goredisCli := goredis.NewUniversalClient(&goredis.UniversalOptions{
+		Addrs: []string{"localhost:6379"},
+	})
 
 	return []helper{
 		{cli: redigoCli, name: "Redigo ", closeFunc: func() {
@@ -76,7 +78,7 @@ func (t *TestClient) SetTestingClient(conn interface{}) {
 	case redigo.Conn:
 		t.name = "Redigo-"
 		t.rh.SetRedigoClient(conn)
-	case *goredis.Client:
+	case goredis.UniversalClient:
 		t.name = "GoRedis-"
 		t.rh.SetGoRedisClient(conn)
 	default:
