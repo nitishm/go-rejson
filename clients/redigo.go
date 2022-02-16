@@ -2,15 +2,19 @@ package clients
 
 import (
 	"fmt"
-	redigo "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/v4/rjs"
 	"strings"
 )
 
+// RedigoClientConn - an abstracted interface for redigo.Conn and redigo.ConnWithTimeout
+type RedigoClientConn interface {
+	Do(commandName string, args ...interface{}) (reply interface{}, err error)
+}
+
 // Redigo implements ReJSON interface for GoModule/Redigo Redis client
 // Link: https://github.com/gomodule/redigo
 type Redigo struct {
-	Conn redigo.Conn // import redigo "github.com/gomodule/redigo"
+	Conn RedigoClientConn
 }
 
 // JSONSet used to set a json object

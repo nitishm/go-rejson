@@ -3,6 +3,7 @@ package rejson
 import (
 	"context"
 	"encoding/json"
+	"github.com/nitishm/go-rejson/v4/clients"
 	"reflect"
 	"testing"
 
@@ -75,10 +76,10 @@ func (t *TestClient) SetTestingClient(conn interface{}) {
 	t.conn = conn
 
 	switch conn := conn.(type) {
-	case redigo.Conn:
+	case clients.RedigoClientConn:
 		t.name = "Redigo-"
 		t.rh.SetRedigoClient(conn)
-	case goredis.UniversalClient:
+	case clients.GoRedisClientConn:
 		t.name = "GoRedis-"
 		t.rh.SetGoRedisClient(conn)
 	default:

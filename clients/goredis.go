@@ -9,18 +9,23 @@ import (
 	"github.com/nitishm/go-rejson/v4/rjs"
 )
 
+// GoRedisClientConn - an abstracted interface for goredis.Client, goredis.ClusterClient, goredis.Ring,
+// or goredis.UniversalClient
+type GoRedisClientConn interface {
+	Do(ctx context.Context, args ...interface{}) *goredis.Cmd
+}
+
 // GoRedis implements ReJSON interface for Go-Redis/Redis Redis client
 // Link: https://github.com/go-redis/redis
 type GoRedis struct {
-	Conn goredis.UniversalClient // import goredis "github.com/go-redis/redis/v8"
-
+	Conn GoRedisClientConn
 	// ctx defines context for the provided connection
 	ctx context.Context
 }
 
 // NewGoRedisClient returns a new GoRedis ReJSON client with the provided context
 // and connection, if ctx is nil default context.Background will be used
-func NewGoRedisClient(ctx context.Context, conn goredis.UniversalClient) *GoRedis {
+func NewGoRedisClient(ctx context.Context, conn GoRedisClientConn) *GoRedis {
 	if ctx == nil {
 		ctx = context.Background()
 	}
