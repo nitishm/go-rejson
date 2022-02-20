@@ -40,6 +40,7 @@ clients is hearty welcome.
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
