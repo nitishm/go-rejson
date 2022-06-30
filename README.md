@@ -32,11 +32,7 @@ clients is hearty welcome.
 
 ## Installation
 
-### v4
     go get github.com/nitishm/go-rejson/v4
-
-### v2
-    go get github.com/nitishm/go-rejson
 
 ## Example usage
 
