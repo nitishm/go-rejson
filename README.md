@@ -135,7 +135,7 @@ func main() {
 		}
 	}()
 	rh.SetGoRedisClient(cli)
-	fmt.Println("\nExecuting Example_JSONSET for Redigo Client")
+	fmt.Println("\nExecuting Example_JSONSET for GoRedis Client")
 	Example_JSONSet(rh)
 }
 ```
