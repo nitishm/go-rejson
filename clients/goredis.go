@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	goredis "github.com/go-redis/redis/v8"
 	"github.com/nitishm/go-rejson/v4/rjs"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 // GoRedisClientConn - an abstracted interface for goredis.Client, goredis.ClusterClient, goredis.Ring,

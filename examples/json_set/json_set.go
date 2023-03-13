@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"log"
 
-	goredis "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/v4"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 var ctx = context.Background()
