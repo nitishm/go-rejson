@@ -119,7 +119,7 @@ func main() {
 			log.Fatalf("goredis - failed to communicate to redis-server: %v", err)
 		}
 	}()
-	rh.SetGoRedisClient(cli)
+	rh.SetGoRedisClientWithContext(context.Background(), cli)
 	fmt.Println("\nExecuting Example_JSONSET for Redigo Client")
 	Example_JSONObj(rh)
 }
