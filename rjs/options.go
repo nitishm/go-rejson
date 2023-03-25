@@ -4,7 +4,8 @@ package rjs
 // It also abstracts options from the required parameters of the commands
 //
 // Like:
-// 	JSON.GET, JSON.SET, JSON.ARRINDEX, JSON.ARRPOP
+//
+//	JSON.GET, JSON.SET, JSON.ARRINDEX, JSON.ARRPOP
 type ReJSONOption interface {
 	// Value returns the value of the option being used
 	Value() []interface{}
@@ -16,10 +17,10 @@ type ReJSONOption interface {
 
 // GetOption implements ReJSONOption for JSON.GET Method
 // Get Options:
-// 	* INDENT 	(with default set to a tab, '\t')
-// 	* NEWLINE	(with default set to a new line, '\n')
-//  * SPACE		(with default set to a space, ' ')
-//  * NOESCAPE  (a boolean type option)
+//   - INDENT 	(with default set to a tab, '\t')
+//   - NEWLINE	(with default set to a new line, '\n')
+//   - SPACE		(with default set to a space, ' ')
+//   - NOESCAPE  (a boolean type option)
 type GetOption struct {
 	name string
 	Arg  string
@@ -45,7 +46,7 @@ func (g *GetOption) SetValue(arg string) {
 
 // SetOption implements ReJSONOption for JSON.SET Method
 // Set Options:
-//	* NX or XX
+//   - NX or XX
 type SetOption string
 
 // MethodID returns the name of the method i.e. JSON.SET

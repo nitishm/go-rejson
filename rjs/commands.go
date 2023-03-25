@@ -170,8 +170,8 @@ func commandJSONDebug(argsIn ...interface{}) (argsOut []interface{}, err error) 
 // This is especially useful if you do not need to client's `Do()` method
 // and instead need to use the JSON.* commands in the MUTLI/EXEC scenario
 // along with some other operations like
-// 	GET/SET/HGET/HSET/...
 //
+//	GET/SET/HGET/HSET/...
 func CommandBuilder(commandNameIn ReJSONCommandID, argsIn ...interface{}) (commandNameOut string, argsOut []interface{}, err error) { // nolint: lll
 
 	cmd, commandNameOut, err := commandNameIn.Details()
