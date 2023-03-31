@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	goredis "github.com/go-redis/redis/v8"
+	goredis "github.com/redis/go-redis/v9"
+
 	"github.com/nitishm/go-rejson/v4/rjs"
 )
 
@@ -38,9 +39,9 @@ func NewGoRedisClient(ctx context.Context, conn GoRedisClientConn) *GoRedis {
 // JSONSet used to set a json object
 //
 // ReJSON syntax:
-// 	JSON.SET <key> <path> <json>
-// 			 [NX | XX]
 //
+//	JSON.SET <key> <path> <json>
+//			 [NX | XX]
 func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (res interface{}, err error) { // nolint: lll
 
 	if len(opts) > 1 {
@@ -68,15 +69,14 @@ func (r *GoRedis) JSONSet(key string, path string, obj interface{}, opts ...rjs.
 // JSONGet used to get a json object
 //
 // ReJSON syntax:
-// 	JSON.GET <key>
+//
+//	JSON.GET <key>
 //			[INDENT indentation-string]
 //			[NEWLINE line-break-string]
 //			[SPACE space-string]
 //			[NOESCAPE]
 //			[path ...]
-//
 func (r *GoRedis) JSONGet(key, path string, opts ...rjs.GetOption) (res interface{}, err error) {
-
 	if len(opts) > 4 {
 		return nil, rjs.ErrTooManyOptionals
 	}
@@ -103,10 +103,9 @@ func (r *GoRedis) JSONGet(key, path string, opts ...rjs.GetOption) (res interfac
 // JSONMGet used to get path values from multiple keys
 //
 // ReJSON syntax:
-// 	JSON.MGET <key> [key ...] <path>
 //
+//	JSON.MGET <key> [key ...] <path>
 func (r *GoRedis) JSONMGet(path string, keys ...string) (res interface{}, err error) {
-
 	if len(keys) == 0 {
 		return nil, rjs.ErrNeedAtLeastOneArg
 	}
@@ -140,10 +139,9 @@ func (r *GoRedis) JSONMGet(path string, keys ...string) (res interface{}, err er
 // JSONDel to delete a json object
 //
 // ReJSON syntax:
-// 	JSON.DEL <key> <path>
 //
+//	JSON.DEL <key> <path>
 func (r *GoRedis) JSONDel(key string, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandDEL, key, path)
 	if err != nil {
 		return nil, err
@@ -155,10 +153,9 @@ func (r *GoRedis) JSONDel(key string, path string) (res interface{}, err error) 
 // JSONType to get the type of key or member at path.
 //
 // ReJSON syntax:
-// 	JSON.TYPE <key> [path]
 //
+//	JSON.TYPE <key> [path]
 func (r *GoRedis) JSONType(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandTYPE, key, path)
 	if err != nil {
 		return nil, err
@@ -175,10 +172,9 @@ func (r *GoRedis) JSONType(key, path string) (res interface{}, err error) {
 // JSONNumIncrBy to increment a number by provided amount
 //
 // ReJSON syntax:
-// 	JSON.NUMINCRBY <key> <path> <number>
 //
+//	JSON.NUMINCRBY <key> <path> <number>
 func (r *GoRedis) JSONNumIncrBy(key, path string, number int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandNUMINCRBY, key, path, number)
 	if err != nil {
 		return nil, err
@@ -194,10 +190,9 @@ func (r *GoRedis) JSONNumIncrBy(key, path string, number int) (res interface{}, 
 // JSONNumMultBy to increment a number by provided amount
 //
 // ReJSON syntax:
-// 	JSON.NUMMULTBY <key> <path> <number>
 //
+//	JSON.NUMMULTBY <key> <path> <number>
 func (r *GoRedis) JSONNumMultBy(key, path string, number int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandNUMMULTBY, key, path, number)
 	if err != nil {
 		return nil, err
@@ -213,10 +208,9 @@ func (r *GoRedis) JSONNumMultBy(key, path string, number int) (res interface{}, 
 // JSONStrAppend to append a jsonstring to an existing member
 //
 // ReJSON syntax:
-// 	JSON.STRAPPEND <key> [path] <json-string>
 //
+//	JSON.STRAPPEND <key> [path] <json-string>
 func (r *GoRedis) JSONStrAppend(key, path, jsonstring string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSTRAPPEND, key, path, jsonstring)
 	if err != nil {
 		return nil, err
@@ -228,10 +222,9 @@ func (r *GoRedis) JSONStrAppend(key, path, jsonstring string) (res interface{}, 
 // JSONStrLen to return the length of a string member
 //
 // ReJSON syntax:
-// 	JSON.STRLEN <key> [path]
 //
+//	JSON.STRLEN <key> [path]
 func (r *GoRedis) JSONStrLen(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSTRLEN, key, path)
 	if err != nil {
 		return nil, err
@@ -243,10 +236,9 @@ func (r *GoRedis) JSONStrLen(key, path string) (res interface{}, err error) {
 // JSONArrAppend to append json value into array at path
 //
 // ReJSON syntax:
-// 	JSON.ARRAPPEND <key> <path> <json> [json ...]
 //
+//	JSON.ARRAPPEND <key> <path> <json> [json ...]
 func (r *GoRedis) JSONArrAppend(key, path string, values ...interface{}) (res interface{}, err error) {
-
 	if len(values) == 0 {
 		return nil, rjs.ErrNeedAtLeastOneArg
 	}
@@ -265,10 +257,9 @@ func (r *GoRedis) JSONArrAppend(key, path string, values ...interface{}) (res in
 // JSONArrLen returns the length of the json array at path
 //
 // ReJSON syntax:
-// 	JSON.ARRLEN <key> [path]
 //
+//	JSON.ARRLEN <key> [path]
 func (r *GoRedis) JSONArrLen(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandARRLEN, key, path)
 	if err != nil {
 		return nil, err
@@ -281,10 +272,9 @@ func (r *GoRedis) JSONArrLen(key, path string) (res interface{}, err error) {
 // to pop last element use rejson.PopArrLast
 //
 // ReJSON syntax:
-// 	JSON.ARRPOP <key> [path [index]]
 //
+//	JSON.ARRPOP <key> [path [index]]
 func (r *GoRedis) JSONArrPop(key, path string, index int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandARRPOP, key, path, index)
 	if err != nil {
 		return nil, err
@@ -301,8 +291,8 @@ func (r *GoRedis) JSONArrPop(key, path string, index int) (res interface{}, err 
 // JSONArrIndex returns the index of the json element provided and return -1 if element is not present
 //
 // ReJSON syntax:
-// 	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 //
+//	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 func (r *GoRedis) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) { // nolint: lll
 
 	args := []interface{}{key, path, jsonValue}
@@ -327,10 +317,9 @@ func (r *GoRedis) JSONArrIndex(key, path string, jsonValue interface{}, optional
 // JSONArrTrim trims an array so that it contains only the specified inclusive range of elements
 //
 // ReJSON syntax:
-// 	JSON.ARRTRIM <key> <path> <start> <stop>
 //
+//	JSON.ARRTRIM <key> <path> <start> <stop>
 func (r *GoRedis) JSONArrTrim(key, path string, start, end int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandARRTRIM, key, path, start, end)
 	if err != nil {
 		return nil, err
@@ -342,10 +331,9 @@ func (r *GoRedis) JSONArrTrim(key, path string, start, end int) (res interface{}
 // JSONArrInsert inserts the json value(s) into the array at path before the index (shifts to the right).
 //
 // ReJSON syntax:
-// 	JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 //
+//	JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 func (r *GoRedis) JSONArrInsert(key, path string, index int, values ...interface{}) (res interface{}, err error) {
-
 	if len(values) == 0 {
 		return nil, rjs.ErrNeedAtLeastOneArg
 	}
@@ -364,10 +352,9 @@ func (r *GoRedis) JSONArrInsert(key, path string, index int, values ...interface
 // JSONObjKeys returns the keys in the object that's referenced by path
 //
 // ReJSON syntax:
-// 	JSON.OBJKEYS <key> [path]
 //
+//	JSON.OBJKEYS <key> [path]
 func (r *GoRedis) JSONObjKeys(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandOBJKEYS, key, path)
 	if err != nil {
 		return nil, err
@@ -389,10 +376,9 @@ func (r *GoRedis) JSONObjKeys(key, path string) (res interface{}, err error) {
 // JSONObjLen report the number of keys in the JSON Object at path in key
 //
 // ReJSON syntax:
-// 	JSON.OBJLEN <key> [path]
 //
+//	JSON.OBJLEN <key> [path]
 func (r *GoRedis) JSONObjLen(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandOBJLEN, key, path)
 	if err != nil {
 		return nil, err
@@ -404,12 +390,11 @@ func (r *GoRedis) JSONObjLen(key, path string) (res interface{}, err error) {
 // JSONDebug reports information
 //
 // ReJSON syntax:
-// 	JSON.DEBUG <subcommand & arguments>
+//
+//	JSON.DEBUG <subcommand & arguments>
 //		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
 //		JSON.DEBUG HELP					- reply with a helpful message
-//
 func (r *GoRedis) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (res interface{}, err error) {
-
 	if subcommand != rjs.DebugMemorySubcommand && subcommand != rjs.DebugHelpSubcommand {
 		err = fmt.Errorf("unknown subcommand - try `JSON.DEBUG HELP`")
 		return
@@ -439,10 +424,9 @@ func (r *GoRedis) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (r
 // JSONForget is an alias for JSONDel
 //
 // ReJSON syntax:
-// 	JSON.FORGET <key> [path]
 //
+//	JSON.FORGET <key> [path]
 func (r *GoRedis) JSONForget(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandFORGET, key, path)
 	if err != nil {
 		return nil, err
@@ -454,10 +438,9 @@ func (r *GoRedis) JSONForget(key, path string) (res interface{}, err error) {
 // JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
 //
 // ReJSON syntax:
-// 	JSON.RESP <key> [path]
 //
+//	JSON.RESP <key> [path]
 func (r *GoRedis) JSONResp(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandRESP, key, path)
 	if err != nil {
 		return nil, err

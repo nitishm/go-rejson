@@ -2,8 +2,9 @@ package clients
 
 import (
 	"fmt"
-	"github.com/nitishm/go-rejson/v4/rjs"
 	"strings"
+
+	"github.com/nitishm/go-rejson/v4/rjs"
 )
 
 // RedigoClientConn - an abstracted interface for redigo.Conn and redigo.ConnWithTimeout
@@ -20,11 +21,10 @@ type Redigo struct {
 // JSONSet used to set a json object
 //
 // ReJSON syntax:
-// 	JSON.SET <key> <path> <json>
-// 			 [NX | XX]
 //
+//	JSON.SET <key> <path> <json>
+//			 [NX | XX]
 func (r *Redigo) JSONSet(key string, path string, obj interface{}, opts ...rjs.SetOption) (res interface{}, err error) {
-
 	if len(opts) > 1 {
 		return nil, rjs.ErrTooManyOptionals
 	}
@@ -44,15 +44,14 @@ func (r *Redigo) JSONSet(key string, path string, obj interface{}, opts ...rjs.S
 // JSONGet used to get a json object
 //
 // ReJSON syntax:
-// 	JSON.GET <key>
+//
+//	JSON.GET <key>
 //			[INDENT indentation-string]
 //			[NEWLINE line-break-string]
 //			[SPACE space-string]
 //			[NOESCAPE]
 //			[path ...]
-//
 func (r *Redigo) JSONGet(key, path string, opts ...rjs.GetOption) (res interface{}, err error) {
-
 	if len(opts) > 4 {
 		return nil, rjs.ErrTooManyOptionals
 	}
@@ -74,10 +73,9 @@ func (r *Redigo) JSONGet(key, path string, opts ...rjs.GetOption) (res interface
 // JSONMGet used to get path values from multiple keys
 //
 // ReJSON syntax:
-// 	JSON.MGET <key> [key ...] <path>
 //
+//	JSON.MGET <key> [key ...] <path>
 func (r *Redigo) JSONMGet(path string, keys ...string) (res interface{}, err error) {
-
 	if len(keys) == 0 {
 		return nil, rjs.ErrNeedAtLeastOneArg
 	}
@@ -97,10 +95,9 @@ func (r *Redigo) JSONMGet(path string, keys ...string) (res interface{}, err err
 // JSONDel used to delete a json object
 //
 // ReJSON syntax:
-// 	JSON.DEL <key> <path>
 //
+//	JSON.DEL <key> <path>
 func (r *Redigo) JSONDel(key string, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandDEL, key, path)
 	if err != nil {
 		return nil, err
@@ -111,10 +108,9 @@ func (r *Redigo) JSONDel(key string, path string) (res interface{}, err error) {
 // JSONType used to get the type of key or member at path.
 //
 // ReJSON syntax:
-// 	JSON.TYPE <key> [path]
 //
+//	JSON.TYPE <key> [path]
 func (r *Redigo) JSONType(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandTYPE, key, path)
 	if err != nil {
 		return nil, err
@@ -141,10 +137,9 @@ func (r *Redigo) JSONType(key, path string) (res interface{}, err error) {
 // JSONNumIncrBy used to increment a number by provided amount
 //
 // ReJSON syntax:
-// 	JSON.NUMINCRBY <key> <path> <number>
 //
+//	JSON.NUMINCRBY <key> <path> <number>
 func (r *Redigo) JSONNumIncrBy(key, path string, number int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandNUMINCRBY, key, path, number)
 	if err != nil {
 		return nil, err
@@ -155,10 +150,9 @@ func (r *Redigo) JSONNumIncrBy(key, path string, number int) (res interface{}, e
 // JSONNumMultBy to multiply a number by provided amount
 //
 // ReJSON syntax:
-// 	JSON.NUMMULTBY <key> <path> <number>
 //
+//	JSON.NUMMULTBY <key> <path> <number>
 func (r *Redigo) JSONNumMultBy(key, path string, number int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandNUMMULTBY, key, path, number)
 	if err != nil {
 		return nil, err
@@ -169,10 +163,9 @@ func (r *Redigo) JSONNumMultBy(key, path string, number int) (res interface{}, e
 // JSONStrAppend used to append a jsonstring to an existing member
 //
 // ReJSON syntax:
-// 	JSON.STRAPPEND <key> [path] <json-string>
 //
+//	JSON.STRAPPEND <key> [path] <json-string>
 func (r *Redigo) JSONStrAppend(key, path, jsonstring string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSTRAPPEND, key, path, jsonstring)
 	if err != nil {
 		return nil, err
@@ -183,10 +176,9 @@ func (r *Redigo) JSONStrAppend(key, path, jsonstring string) (res interface{}, e
 // JSONStrLen used to return the length of a string member
 //
 // ReJSON syntax:
-// 	JSON.STRLEN <key> [path]
 //
+//	JSON.STRLEN <key> [path]
 func (r *Redigo) JSONStrLen(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandSTRLEN, key, path)
 	if err != nil {
 		return nil, err
@@ -197,10 +189,9 @@ func (r *Redigo) JSONStrLen(key, path string) (res interface{}, err error) {
 // JSONArrAppend used to append json value into array at path
 //
 // ReJSON syntax:
-// 	JSON.ARRAPPEND <key> <path> <json> [json ...]
 //
+//	JSON.ARRAPPEND <key> <path> <json> [json ...]
 func (r *Redigo) JSONArrAppend(key, path string, values ...interface{}) (res interface{}, err error) {
-
 	if len(values) == 0 {
 		return nil, rjs.ErrNeedAtLeastOneArg
 	}
@@ -218,10 +209,9 @@ func (r *Redigo) JSONArrAppend(key, path string, values ...interface{}) (res int
 // JSONArrLen returns the length of the json array at path
 //
 // ReJSON syntax:
-// 	JSON.ARRLEN <key> [path]
 //
+//	JSON.ARRLEN <key> [path]
 func (r *Redigo) JSONArrLen(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandARRLEN, key, path)
 	if err != nil {
 		return nil, err
@@ -233,10 +223,9 @@ func (r *Redigo) JSONArrLen(key, path string) (res interface{}, err error) {
 // to pop last element use rejson.PopArrLast
 //
 // ReJSON syntax:
-// 	JSON.ARRPOP <key> [path [index]]
 //
+//	JSON.ARRPOP <key> [path [index]]
 func (r *Redigo) JSONArrPop(key, path string, index int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandARRPOP, key, path, index)
 	if err != nil {
 		return nil, err
@@ -247,8 +236,8 @@ func (r *Redigo) JSONArrPop(key, path string, index int) (res interface{}, err e
 // JSONArrIndex returns the index of the json element provided and return -1 if element is not present
 //
 // ReJSON syntax:
-// 	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 //
+//	JSON.ARRINDEX <key> <path> <json-scalar> [start [stop]]
 func (r *Redigo) JSONArrIndex(key, path string, jsonValue interface{}, optionalRange ...int) (res interface{}, err error) { // nolint: lll
 
 	args := []interface{}{key, path, jsonValue}
@@ -272,10 +261,9 @@ func (r *Redigo) JSONArrIndex(key, path string, jsonValue interface{}, optionalR
 // JSONArrTrim trims an array so that it contains only the specified inclusive range of elements
 //
 // ReJSON syntax:
-// 	JSON.ARRTRIM <key> <path> <start> <stop>
 //
+//	JSON.ARRTRIM <key> <path> <start> <stop>
 func (r *Redigo) JSONArrTrim(key, path string, start, end int) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandARRTRIM, key, path, start, end)
 	if err != nil {
 		return nil, err
@@ -286,10 +274,9 @@ func (r *Redigo) JSONArrTrim(key, path string, start, end int) (res interface{},
 // JSONArrInsert inserts the json value(s) into the array at path before the index (shifts to the right).
 //
 // ReJSON syntax:
-// 	JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 //
+//	JSON.ARRINSERT <key> <path> <index> <json> [json ...]
 func (r *Redigo) JSONArrInsert(key, path string, index int, values ...interface{}) (res interface{}, err error) {
-
 	if len(values) == 0 {
 		return nil, rjs.ErrNeedAtLeastOneArg
 	}
@@ -307,10 +294,9 @@ func (r *Redigo) JSONArrInsert(key, path string, index int, values ...interface{
 // JSONObjKeys returns the keys in the object that's referenced by path
 //
 // ReJSON syntax:
-// 	JSON.OBJKEYS <key> [path]
 //
+//	JSON.OBJKEYS <key> [path]
 func (r *Redigo) JSONObjKeys(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandOBJKEYS, key, path)
 	if err != nil {
 		return nil, err
@@ -331,10 +317,9 @@ func (r *Redigo) JSONObjKeys(key, path string) (res interface{}, err error) {
 // JSONObjLen report the number of keys in the JSON Object at path in key
 //
 // ReJSON syntax:
-// 	JSON.OBJLEN <key> [path]
 //
+//	JSON.OBJLEN <key> [path]
 func (r *Redigo) JSONObjLen(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandOBJLEN, key, path)
 	if err != nil {
 		return nil, err
@@ -345,12 +330,11 @@ func (r *Redigo) JSONObjLen(key, path string) (res interface{}, err error) {
 // JSONDebug reports information
 //
 // ReJSON syntax:
-// 	JSON.DEBUG <subcommand & arguments>
+//
+//	JSON.DEBUG <subcommand & arguments>
 //		JSON.DEBUG MEMORY <key> [path]	- report the memory usage in bytes of a value. path defaults to root if not provided.
 //		JSON.DEBUG HELP					- reply with a helpful message
-//
 func (r *Redigo) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (res interface{}, err error) {
-
 	if subcommand != rjs.DebugMemorySubcommand && subcommand != rjs.DebugHelpSubcommand {
 		err = fmt.Errorf("unknown subcommand - try `JSON.DEBUG HELP`")
 		return
@@ -379,10 +363,9 @@ func (r *Redigo) JSONDebug(subcommand rjs.DebugSubCommand, key, path string) (re
 // JSONForget is an alias for JSONDel
 //
 // ReJSON syntax:
-// 	JSON.FORGET <key> [path]
 //
+//	JSON.FORGET <key> [path]
 func (r *Redigo) JSONForget(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandFORGET, key, path)
 	if err != nil {
 		return nil, err
@@ -393,10 +376,9 @@ func (r *Redigo) JSONForget(key, path string) (res interface{}, err error) {
 // JSONResp returns the JSON in key in Redis Serialization Protocol (RESP).
 //
 // ReJSON syntax:
-// 	JSON.RESP <key> [path]
 //
+//	JSON.RESP <key> [path]
 func (r *Redigo) JSONResp(key, path string) (res interface{}, err error) {
-
 	name, args, err := rjs.CommandBuilder(rjs.ReJSONCommandRESP, key, path)
 	if err != nil {
 		return nil, err

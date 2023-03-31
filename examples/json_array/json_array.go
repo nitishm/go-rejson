@@ -9,8 +9,9 @@ import (
 
 	"github.com/nitishm/go-rejson/v4/rjs"
 
-	goredis "github.com/go-redis/redis/v8"
 	"github.com/gomodule/redigo/redis"
+	goredis "github.com/redis/go-redis/v9"
+
 	"github.com/nitishm/go-rejson/v4"
 )
 
@@ -169,7 +170,7 @@ func main() {
 			log.Fatalf("goredis - failed to communicate to redis-server: %v", err)
 		}
 	}()
-	rh.SetGoRedisClient(cli)
+	rh.SetGoRedisClientWithContext(context.Background(), cli)
 	fmt.Println("\nExecuting Example_JSONSET for Redigo Client")
 	Example_JSONArray(rh)
 }
