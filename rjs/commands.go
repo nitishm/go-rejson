@@ -34,6 +34,20 @@ func commandJSONSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	return
 }
 
+func commandJSONUSet(argsIn ...interface{}) (argsOut []interface{}, err error) {
+	key := argsIn[0]
+	path := argsIn[1]
+	obj := argsIn[2]
+
+	argsOut = append(argsOut, key, path)
+	argsOut = append(argsOut, obj)
+
+	if len(argsIn) == 4 {
+		argsOut = append(argsOut, argsIn[3])
+	}
+	return
+}
+
 func commandJSONGet(argsIn ...interface{}) (argsOut []interface{}, err error) {
 	key := argsIn[0]
 	path := argsIn[1]
